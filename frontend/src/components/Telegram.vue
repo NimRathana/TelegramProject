@@ -12,7 +12,6 @@
         </v-col>
         <v-col cols="12" md="3" class="align-center">
           <v-btn @click="SendCode()">Login</v-btn>
-        <VImg src="./assets/user.png" />
         </v-col>
     </v-row>
 
@@ -121,7 +120,7 @@ export default {
     },
     mounted(){
       useHead({ title: 'Telegram' })
-      if (this.userStore.session && this.userStore.user) {
+      if (this.userStore.session && this.userStore.user != "undefined") {
         const phone = JSON.parse(this.userStore.user)
         axios.post(process.env.APP_URL + '/api/Reconnect', { phone: phone.phone })
         .then((res) => {
@@ -154,12 +153,18 @@ export default {
             this.userStore.setUser(res.data.user);
           }
           if(res.status == 200 && res.data.message == "Code sent successfully"){
-            this.userStore.setSession(res.data.session);
-            this.userStore.setUser(res.data.user);
             this.showCode = true;
           }
           if(res.status == 200 && res.data.twoFA == true){
             this.showPassword = true;
+          }
+          if(res.status == 200 && res.data.message == "Logged in"){
+            this.userStore.setSession(res.data.session);
+            this.userStore.setUser(res.data.user);
+          }
+          if(res.status == 200 && res.data.message == "Logged in with 2FA"){
+            this.userStore.setSession(res.data.session);
+            this.userStore.setUser(res.data.user);
           }
           this.loadingState.stopLoading();
         }).catch((e)=>{

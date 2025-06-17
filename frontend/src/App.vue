@@ -269,8 +269,8 @@
                                               </VBadge>
                                           </VListItemAction>
                                       </template>
-                                      <VListItemTitle class="font-weight-semibold">{{ user.fullName }}</VListItemTitle>
-                                      <VListItemSubtitle>@{{ user.username }}</VListItemSubtitle>
+                                      <VListItemTitle class="font-weight-semibold">{{ user?.fullName }}</VListItemTitle>
+                                      <VListItemSubtitle>@{{ user?.username }}</VListItemSubtitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
                                   <VListItem link>
