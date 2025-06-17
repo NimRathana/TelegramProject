@@ -1,18 +1,18 @@
 <template>
   <v-container fluid class="fill-height d-flex flex-column pa-0">
     <v-row class="w-100" style="flex: 0 0 auto;">
-      <v-col cols="12">
-        <v-btn @click="toggleTheme()">
-          <v-icon left>{{ theme === 'dark' ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
-          {{ theme === 'dark' ? 'Light' : 'Dark' }}
-        </v-btn>
-
-        <v-text-field label="Phone" v-model="phone" />
-        <v-text-field v-if="showCode" label="Code" v-model="code" />
-        <v-text-field v-if="showPassword" label="Password" v-model="password" />
-
-        <v-btn @click="SendCode()">Login</v-btn>
-      </v-col>
+        <v-col cols="12" md="3">
+          <v-text-field label="Phone" v-model="phone" />
+        </v-col>
+        <v-col v-if="showCode" cols="12" md="3">
+          <v-text-field label="Code" v-model="code" />
+        </v-col>
+        <v-col v-if="showPassword" cols="12" md="3">
+          <v-text-field label="Password" v-model="password" />
+        </v-col>
+        <v-col cols="12" md="3" class="align-center">
+          <v-btn @click="SendCode()">Login</v-btn>
+        </v-col>
     </v-row>
 
     <v-row class="w-100" style="flex: 1 1 auto; overflow: hidden;">
@@ -64,12 +64,14 @@ import { useHead } from '@vueuse/head'
 import { useAppStore } from '@/stores/app'
 import axios from 'axios'
 import { useLoadingState } from '@/stores/loading'
+import { useUserStore } from '@/stores/userstore'
 
 export default {
     data() {
       return {
         appStore: useAppStore(),
         loadingState: useLoadingState(),
+        userStore: useUserStore(),
         theme: 'dark',
         color: 'primary',
         phone: null,
@@ -113,17 +115,25 @@ export default {
                   modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
               },
           },
-        })
+        }),
       }
     },
     mounted(){
       useHead({ title: 'Telegram' })
+      if (this.userStore.session && this.userStore.user) {
+        const phone = JSON.parse(this.userStore.user)
+        axios.post(process.env.APP_URL + '/api/Reconnect', { phone: phone.phone })
+        .then((res) => {
+          this.userStore.setUser(res.data.user);
+        })
+        .catch((err) => {
+            localStorage.clear();
+            this.errorMessage = "Session expired, please log in again.";
+            this.dialogError = true;
+        });
+      }
     },
     methods: {
-      toggleTheme() {
-        this.theme = localStorage.getItem('theme') == 'dark' ? 'light' : 'dark' || 'dark',
-        this.appStore.setTheme(this.theme)
-      },
       SendCode(){
         this.loadingState.startLoading();
         var url = "SendCode";
@@ -134,11 +144,17 @@ export default {
           url = "CheckPassword";
         }
         axios.post(process.env.APP_URL + '/api/' + url, {
-          phone: this.phone,
-          code: this.code,
+          phone: (this.phone || '').toString().replace(/\s+/g, ''),
+          code: (this.code || '').toString().replace(/\s+/g, ''),
           password: this.password
         }).then((res)=>{
+          if(res.status == 200 && res.data.message == "Already logged in"){
+            this.userStore.setSession(res.data.session);
+            this.userStore.setUser(res.data.user);
+          }
           if(res.status == 200 && res.data.message == "Code sent successfully"){
+            this.userStore.setSession(res.data.session);
+            this.userStore.setUser(res.data.user);
             this.showCode = true;
           }
           if(res.status == 200 && res.data.twoFA == true){

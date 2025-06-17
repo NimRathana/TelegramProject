@@ -215,9 +215,7 @@
                     </div>
                 </v-container>
             </v-navigation-drawer>
-            <v-app-bar :elevation="0" style="position: fixed;top:0;z-index: 98;">
-              <v-app-bar-nav-icon></v-app-bar-nav-icon>
-              <v-app-bar-title>d;fsfsdf</v-app-bar-title>
+            <v-app-bar :elevation="0" density="compact" border style="position: fixed;top:0;z-index: 98;">
               <template v-slot:append>
                   <div class="d-flex justify-end align-center">
                       <v-menu offset-y>
@@ -241,7 +239,7 @@
                           <template #activator="{ props }">
                               <v-btn v-bind="props" icon>
                                   <v-icon>
-                                  mdi-weather-sunny
+                                    mdi-weather-sunny
                                   </v-icon>
                               </v-btn>
                           </template>
@@ -266,15 +264,13 @@
                                               <VBadge dot location="bottom right" offset-x="3" offset-y="3"
                                                   color="success">
                                                   <VAvatar color="primary" variant="tonal">
-                                                      <VImg src="./assets/Collapsed.png" />
+                                                      <VImg :src="user.username != null ? user.profileImage : './assets/Collapsed.png'" />
                                                   </VAvatar>
                                               </VBadge>
                                           </VListItemAction>
                                       </template>
-                                      <VListItemTitle class="font-weight-semibold">
-                                          name
-                                      </VListItemTitle>
-                                      <VListItemSubtitle>email</VListItemSubtitle>
+                                      <VListItemTitle class="font-weight-semibold">{{ user.fullName }}</VListItemTitle>
+                                      <VListItemSubtitle>@{{ user.username }}</VListItemSubtitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
                                   <VListItem link>
@@ -290,7 +286,7 @@
                                       <VListItemTitle>home</VListItemTitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
-                                  <VListItem>
+                                  <VListItem link @click="logout(user)">
                                       <template #prepend>
                                           <VIcon class="me-2" icon="mdi-logout" size="22" />
                                       </template>
@@ -384,12 +380,15 @@ import { useAppStore } from '@/stores/app'
 import { useLoadingState } from '@/stores/loading'
 import { VApp, VTextField } from 'vuetify/components'
 import Loading from './components/Loading.vue'
+import { useUserStore } from '@/stores/userstore'
+import axios from 'axios'
 
 export default {
   data() {
     return {
       appStore: useAppStore(),
       loadingState: useLoadingState(),
+      userStore: useUserStore(),
       theme: localStorage.getItem('theme') || 'dark',
       toggleRightDrawer: false,
       colors: ['#FF5733', '#33FF57', '#3357FF', '#F1C40F'],
@@ -401,6 +400,7 @@ export default {
       selectedContent: useAppStore().content || 'Compact',
       selectedDirection: useAppStore().direction || 'Left',
       overlay: true,
+      user: []
     }
   },
   watch: {
@@ -421,6 +421,9 @@ export default {
     },
     'appStore.color'(newColor){
       this.selectedColor = this.appStore.color
+    },
+    'userStore.user'(val){
+      this.user = val;
     }
   },
   methods: {
@@ -455,6 +458,17 @@ export default {
     updateColorPicker(color) {
       this.appStore.setColor(color);
     },
+    logout(user){
+      axios.post(process.env.APP_URL + '/api/Logout', { phone: (user.phone || '').toString().replace(/\s+/g, '') })
+      .then((res) => {
+        this.userStore.clear();
+      })
+      .catch((err) => {
+          localStorage.clear();
+          this.errorMessage = "Session expired, please log in again.";
+          this.dialogError = true;
+      });
+    }
   },
 }
 
