@@ -8,6 +8,7 @@ const apiId = 28426783;
 const apiHash = '8d1eaac8b1871959a218bd2e0f4c1d67';
 // const apiHash = 'b551d2fa37b2e9258b56876524ec929f';
 const sessions = new Map();
+
 // === Utility Functions ===
 function getSessionPath(phone) {
     return path.join(__dirname, 'sessions', `${phone}.session`);

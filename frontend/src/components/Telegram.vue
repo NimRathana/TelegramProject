@@ -12,6 +12,7 @@
         </v-col>
         <v-col cols="12" md="3" class="align-center">
           <v-btn @click="SendCode()">Login</v-btn>
+        <VImg src="./assets/user.png" />
         </v-col>
     </v-row>
 

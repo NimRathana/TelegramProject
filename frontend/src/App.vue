@@ -255,7 +255,7 @@
                   </div>
                   <VBadge dot location="bottom right" offset-x="3" offset-y="3" class="mx-3" color="success" bordered>
                       <VAvatar class="cursor-pointer" color="primary" variant="tonal">
-                          <VImg src="./assets/Collapsed.png" />
+                          <VImg width="100" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
                           <VMenu activator="parent" width="230" location="bottom end" offset="14px">
                               <VList>
                                   <VListItem>
@@ -264,7 +264,7 @@
                                               <VBadge dot location="bottom right" offset-x="3" offset-y="3"
                                                   color="success">
                                                   <VAvatar color="primary" variant="tonal">
-                                                      <VImg :src="user.username != null ? user.profileImage : './assets/Collapsed.png'" />
+                                                      <VImg cover :aspect-ratio="1" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
                                                   </VAvatar>
                                               </VBadge>
                                           </VListItemAction>
@@ -468,7 +468,7 @@ export default {
           this.errorMessage = "Session expired, please log in again.";
           this.dialogError = true;
       });
-    }
+    },
   },
 }
 
