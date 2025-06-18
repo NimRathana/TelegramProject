@@ -5,9 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const apiId = Number(process.env.API_ID);
-// const apiId = 20343500;
 const apiHash = process.env.API_HASH;
-// const apiHash = 'b551d2fa37b2e9258b56876524ec929f';
 const sessions = new Map();
 
 // === Utility Functions ===
