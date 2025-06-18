@@ -8,7 +8,7 @@
           <v-text-field label="Code" v-model="code" />
         </v-col>
         <v-col v-if="showPassword" cols="12" md="3">
-          <v-text-field label="Password" v-model="password" />
+          <v-text-field label="Password" v-model="password" :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'" @click:append-inner="visible = !visible" />
         </v-col>
         <v-col cols="12" md="3" class="align-center">
           <v-btn @click="SendCode()">Login</v-btn>
@@ -116,6 +116,7 @@ export default {
               },
           },
         }),
+        visible: false
       }
     },
     mounted(){

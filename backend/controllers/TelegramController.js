@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const apiId = process.env.API_ID;
+const apiId = Number(process.env.API_ID);
 // const apiId = 20343500;
 const apiHash = process.env.API_HASH;
 // const apiHash = 'b551d2fa37b2e9258b56876524ec929f';
@@ -128,7 +128,7 @@ class TelegramController {
                 phoneNumber: '+855' + phone,
                 phoneCode: async () => code,
                 phoneCodeHash: sentCode.phoneCodeHash,
-                onError: console.log,
+                onError: (err) => { throw err; },
             });
 
             const sessionString = client.session.save();
@@ -157,6 +157,9 @@ class TelegramController {
             if (err.message === 'Account has 2FA enabled.') {
                 return res.status(200).json({ message: "2FA password required", twoFA: true });
             }
+            if (err.errorMessage === 'PHONE_CODE_INVALID') {
+                return res.status(400).json({ error: "The verification code is invalid or expired." });
+            }
             if (err.errorMessage === 'FLOOD' && err.seconds) {
                 return res.status(429).json({
                     error: "Too many attempts. Please wait before trying again.",
@@ -164,7 +167,7 @@ class TelegramController {
                     waitMinutes: Math.ceil(err.seconds / 60),
                 });
             }
-            return res.status(500).json({ error: err.errorMessage });
+            return res.status(500).json({ error: err.errorMessage || err.message });
         }
     }
 
@@ -179,12 +182,15 @@ class TelegramController {
         if (!sessionInfo) {
             return res.status(400).json({ error: "No session found. Please request a code first." });
         }
-        const { client } = sessionInfo;
+        const { client, sentCode } = sessionInfo;
         try {
             const pwdInfo = await client.invoke(new Api.account.GetPassword());
             await client.start({
+                phoneNumber: '+855' + phone,
+                phoneCode: async () => code,
+                phoneCodeHash: sentCode.phoneCodeHash,
                 password: async () => password,
-                onError: console.log,
+                onError: (err) => console.error("Error in start():", err),
             });
 
             const sessionString = client.session.save();
@@ -217,7 +223,10 @@ class TelegramController {
                     waitMinutes: Math.ceil(err.seconds / 60),
                 });
             }
-            return res.status(403).json({ error: "Invalid 2FA password", details: err.errorMessage });
+            if (err.errorMessage === 'PHONE_CODE_INVALID') {
+                return res.status(400).json({ error: "The verification code is invalid or expired." });
+            }
+            return res.status(403).json({ error: err.errorMessage || err.message });
         }
     }
 
