@@ -10,6 +10,7 @@ import 'vuetify/styles'
 
 // Composables
 import { createVuetify } from 'vuetify'
+import { VTreeview } from 'vuetify/labs/VTreeview'
 import Quill from 'quill';
 import ImageResize from 'quill-image-resize-module';
 import { ImageDrop } from 'quill-image-drop-module';
@@ -19,5 +20,8 @@ Quill.register('modules/imageResize', ImageResize);
 export default createVuetify({
   theme: {
     defaultTheme: 'dark',
+  },
+  components: {
+    VTreeview,
   },
 })

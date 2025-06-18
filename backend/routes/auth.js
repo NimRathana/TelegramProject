@@ -7,5 +7,7 @@ Router.post('/api/VerifyCode', TelegramController.VerifyCode);
 Router.post('/api/CheckPassword', TelegramController.CheckPassword);
 Router.post('/api/Reconnect', TelegramController.Reconnect);
 Router.post('/api/Logout', TelegramController.Logout);
+Router.post('/api/GetAllGroups', TelegramController.GetAllGroups);
+Router.post('/api/GetAllGroupMembers', TelegramController.GetAllGroupMembers);
 
 module.exports = Router;

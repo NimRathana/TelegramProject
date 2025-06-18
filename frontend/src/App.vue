@@ -340,6 +340,9 @@
                             },
                             VSnackbar: {
                               color: appStore.color,
+                            },
+                            VTreeview: {
+                              color: appStore.color
                             }
                           }"
                         >

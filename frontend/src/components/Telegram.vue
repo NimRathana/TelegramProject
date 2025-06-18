@@ -10,15 +10,47 @@
         <v-col v-if="showPassword" cols="12" md="3">
           <v-text-field label="Password" v-model="password" :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'" @click:append-inner="visible = !visible" />
         </v-col>
-        <v-col v-if="showBtnLogin" cols="12" md="3" class="align-center">
-          <v-btn @click="SendCode()">Login</v-btn>
+        <v-col cols="12" md="3" class="align-center">
+          <v-btn v-if="showBtnLogin" @click="SendCode()">Login</v-btn>
+          <v-btn v-if="!showBtnLogin" @click="GetAllGroup">Get Group</v-btn>
         </v-col>
     </v-row>
 
     <v-row class="w-100" style="flex: 1 1 auto; overflow: hidden;">
-    <v-col cols="6" class="h-100">
-        <div class="h-100 d-flex align-center justify-center">
-          <v-card class="w-100 h-100"></v-card>
+      <v-col cols="6" class="h-100">
+        <div class="h-100 d-flex justify-center">
+          <v-card class="treeview-card w-100 h-100">
+              <v-treeview
+                :items="items"
+                item-value="id"
+                item-title="name"
+                density="compact"
+                selectable
+                transition
+                select-strategy="classic"
+                activatable
+                hoverable
+                @click:select="SelectedItem"
+                @click:open="OpenItem"
+                @update:activated="TreeViewHeight"
+                style="height: 300px;"
+              >
+                <template #prepend="{ item }">
+                  <v-avatar size="40" class="ml-1 pa-1">
+                      <template v-if="item.photoUrl && item.photoUrl != 'data:image/jpeg;base64,'">
+                          <img :src="item.photoUrl" alt="Group photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" />
+                      </template>
+                      <template v-else>
+                          <v-icon class="white--text" small>mdi-account-group</v-icon>
+                      </template>
+                  </v-avatar>
+              </template>
+              <template #title="{ item }">
+                  <span class="font-weight-regular d-flex" v-if="item.type === 'group' || item.type === 'supergroup'">{{ item.name }} <p class="ml-2 text-disabled">({{ item.membersCount }} members)</p> </span>
+                  <span class="font-weight-regular d-flex" v-else>{{ item.name }}</span>
+              </template>
+              </v-treeview>
+          </v-card>
         </div>
       </v-col>
 
@@ -73,6 +105,7 @@ import { useAppStore } from '@/stores/app'
 import axios from 'axios'
 import { useLoadingState } from '@/stores/loading'
 import { useUserStore } from '@/stores/userstore'
+import $ from 'jquery'
 
 export default {
   data() {
@@ -127,12 +160,19 @@ export default {
         },
       }),
       visible: false,
-      snackbar: false
+      snackbar: false,
+      tree: [],
+      types: [],
+      items: [],
     }
   },
   mounted(){
     useHead({ title: 'Telegram' })
+
+    this.TreeViewHeight();
+
     if (this.userStore.session && this.userStore.user != "undefined") {
+      this.loadingState.startLoading();
       const phone = JSON.parse(this.userStore.user)
       axios.post(process.env.APP_URL + '/api/Reconnect', { phone: phone.phone })
       .then((res) => {
@@ -141,11 +181,13 @@ export default {
         this.snackbar = true;
         this.showPhone = false;
         this.showBtnLogin = false;
+        this.loadingState.stopLoading();
       })
       .catch((err) => {
           localStorage.clear();
           this.showMessage = "Session expired, please log in again.";
           this.dialogError = true;
+          this.loadingState.stopLoading();
       });
     }else{
       this.showPhone = true;
@@ -222,11 +264,94 @@ export default {
         this.loadingState.stopLoading();
       })
     },
+    TreeViewHeight(){
+      const treeviewCard = document.querySelector('.treeview-card');
+      const footer = document.querySelector('.v-footer');
+
+      if (treeviewCard && footer) {
+        const resizeObserver = new ResizeObserver(entries => {
+          for (let entry of entries) {
+            const footerHeight = $(footer).outerHeight(true) - 23;
+            const newHeight = entry.contentRect.height - footerHeight;
+            $('.v-treeview').height(newHeight);
+          }
+        });
+
+        resizeObserver.observe(treeviewCard);
+      }
+    },
+    GetAllGroup(){
+      if(this.userStore.user != "undefined"){
+        const phone = JSON.parse(this.userStore.user.phone)
+        this.loadingState.startLoading();
+        axios.post(process.env.APP_URL + '/api/GetAllGroups', {
+          phone: phone,
+        }).then((res)=>{
+          this.items = res.data.groups;
+          this.TreeViewHeight();
+          this.loadingState.stopLoading();
+        }).catch((e)=>{
+          console.log(e);
+          this.showMessage = e.response.data.error;
+          this.dialogError = true;
+          this.loadingState.stopLoading();
+        })
+      }
+    },
+    SelectedItem(item){
+      this.TreeViewHeight();
+    },
+    OpenItem(item){
+      if(this.userStore.user != "undefined"){
+        const phone = JSON.parse(this.userStore.user.phone)
+        this.loadingState.startLoading();
+        axios.post(process.env.APP_URL + '/api/GetAllGroupMembers', {
+          phone: phone,
+          id: item.id
+        }).then((res)=>{
+          const members = res.data.members;
+          const groupIndex = this.items.findIndex(group => group.id === members[0].groupId);
+
+          if (groupIndex !== -1) {
+            // Initialize children if missing
+            if (!this.items[groupIndex].children) {
+              this.$set(this.items[groupIndex], 'children', []);
+            }
+
+            // Optional: create a set of existing children ids to avoid duplicates
+            const existingIds = new Set(this.items[groupIndex].children.map(c => c.id));
+
+            // Push each member as a child node if not already present
+            members.forEach(member => {
+              const memberId = member.id || member.userId.toString();
+              if (!existingIds.has(memberId)) {
+                this.items[groupIndex].children.push({
+                  id: memberId,
+                  groupId: member.groupId,
+                  name: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim(),
+                  firstName: member.firstName,
+                  lastName: member.lastName,
+                  photoUrl: member.photoUrl,
+                  // children: [],
+                });
+              }
+            });
+          }
+          this.TreeViewHeight();
+          this.loadingState.stopLoading();
+        }).catch((e)=>{
+          console.log(e);
+          this.showMessage = e.response.data.error;
+          this.dialogError = true;
+          this.loadingState.stopLoading();
+        })
+      }
+    },
     clear(){
       this.phone = false;
       this.code = false;
       this.password = false;
-    }
+    },
   },
 }
 </script>
