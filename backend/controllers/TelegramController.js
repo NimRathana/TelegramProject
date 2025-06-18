@@ -190,7 +190,7 @@ class TelegramController {
                 phoneCode: async () => code,
                 phoneCodeHash: sentCode.phoneCodeHash,
                 password: async () => password,
-                onError: (err) => console.error("Error in start():", err),
+                onError: (err) => { throw err; },
             });
 
             const sessionString = client.session.save();
@@ -316,7 +316,6 @@ class TelegramController {
                     waitMinutes: Math.ceil(err.seconds / 60),
                 });
             }
-            console.error("Reconnect error:", err);
             res.status(500).json({ error: err.errorMessage || err.message });
         }
     }
