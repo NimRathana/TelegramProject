@@ -1,4 +1,4 @@
-const { Api, TelegramClient } = require('telegram');
+const { Api, TelegramClient, password } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const fs = require('fs');
 const path = require('path');
@@ -48,11 +48,7 @@ class TelegramController {
         try {
             const sessionString = loadSession(phone);
             const stringSession = new StringSession(sessionString);
-            const client = new TelegramClient(stringSession, apiId, apiHash, {
-                autoReconnect: true,
-                useWSS: false,
-                updateWorkers: 0
-            });
+            const client = new TelegramClient(stringSession, apiId, apiHash, { autoReconnect: true });
             
             await client.connect();
 
@@ -126,7 +122,6 @@ class TelegramController {
                 phoneNumber: '+855' + phone,
                 phoneCode: async () => code,
                 phoneCodeHash: sentCode.phoneCodeHash,
-                onError: (err) => { throw err; },
             });
 
             const sessionString = client.session.save();
@@ -170,9 +165,9 @@ class TelegramController {
     }
 
     static async CheckPassword(req, res) {
-        const { phone, code, password } = req.body;
+        const { phone, code, password: pass } = req.body;
 
-        if (!phone || !password || !code) {
+        if (!phone || !pass || !code) {
             return res.status(400).json({ error: "Password is required" });
         }
 
@@ -180,16 +175,14 @@ class TelegramController {
         if (!sessionInfo) {
             return res.status(400).json({ error: "No session found. Please request a code first." });
         }
-        const { client, sentCode } = sessionInfo;
+        const { client } = sessionInfo;
         try {
+            await client.connect();
+
             const pwdInfo = await client.invoke(new Api.account.GetPassword());
-            await client.start({
-                phoneNumber: '+855' + phone,
-                phoneCode: async () => code,
-                phoneCodeHash: sentCode.phoneCodeHash,
-                password: async () => password,
-                onError: (err) => { throw err; },
-            });
+            const inputCheckPasswordSRP = await password.computeCheck(pwdInfo, pass);
+
+            await client.invoke(new Api.auth.CheckPassword({ password: inputCheckPasswordSRP }));
 
             const sessionString = client.session.save();
             saveSession(phone, sessionString);
@@ -224,6 +217,9 @@ class TelegramController {
             if (err.errorMessage === 'PHONE_CODE_INVALID') {
                 return res.status(400).json({ error: "The verification code is invalid or expired." });
             }
+            if (err.errorMessage === 'PASSWORD_HASH_INVALID') {
+                return res.status(400).json({ error: "The password is incorrect." });
+            }
             return res.status(403).json({ error: err.errorMessage || err.message });
         }
     }
@@ -235,19 +231,23 @@ class TelegramController {
             return res.status(400).json({ error: "Phone is required" });
         }
         const slicePhone = phone.slice(3);
-        const sessionInfo = sessions.get(slicePhone);
-        if (!sessionInfo) {
+        const sessionFilePath = path.join(__dirname, 'sessions', `${slicePhone}.session`);
+
+        if (!fs.existsSync(sessionFilePath)) {
             return res.status(404).json({ error: "Session not found" });
         }
 
-        const { client } = sessionInfo;
+        const sessionString = fs.readFileSync(sessionFilePath, 'utf8');
+        const stringSession = new StringSession(sessionString);
+        const client = new TelegramClient(stringSession, apiId, apiHash, { autoReconnect: true });
 
         try {
+            await client.connect();
             await client.invoke(new Api.auth.LogOut());
             await client.disconnect();
 
-            deleteSession(phone);
-            sessions.delete(phone);
+            deleteSession(slicePhone);
+            sessions.delete(slicePhone);
 
             res.json({ message: "Logged out successfully" });
         } catch (err) {
@@ -281,7 +281,7 @@ class TelegramController {
 
             const isAuthorized = await client.checkAuthorization();
             if (!isAuthorized) {
-                deleteSession(phone);
+                deleteSession(phone.slice(3));
                 return res.status(401).json({ error: "Session expired. Please log in again." });
             }
 

@@ -222,23 +222,6 @@
                           <template #activator="{ props }">
                               <v-btn v-bind="props" icon>
                                   <v-icon>
-                                      mdi-translate
-                                  </v-icon>
-                              </v-btn>
-                          </template>
-                          <v-list>
-                              <v-list-item>
-                                  <v-list-item-title>english</v-list-item-title>
-                              </v-list-item>
-                              <v-list-item class="mt-3">
-                                  <v-list-item-title>khmer</v-list-item-title>
-                              </v-list-item>
-                          </v-list>
-                      </v-menu>
-                      <v-menu offset-y>
-                          <template #activator="{ props }">
-                              <v-btn v-bind="props" icon>
-                                  <v-icon>
                                     mdi-weather-sunny
                                   </v-icon>
                               </v-btn>
@@ -354,6 +337,9 @@
                             },
                             VDialog: {
                               color: appStore.color,
+                            },
+                            VSnackbar: {
+                              color: appStore.color,
                             }
                           }"
                         >
@@ -378,8 +364,6 @@
 <script>
 import { useAppStore } from '@/stores/app'
 import { useLoadingState } from '@/stores/loading'
-import { VApp, VTextField } from 'vuetify/components'
-import Loading from './components/Loading.vue'
 import { useUserStore } from '@/stores/userstore'
 import axios from 'axios'
 
@@ -464,9 +448,10 @@ export default {
         this.userStore.clear();
       })
       .catch((err) => {
-          localStorage.clear();
-          this.errorMessage = "Session expired, please log in again.";
-          this.dialogError = true;
+          if(err.response.data.error == "Session not found"){
+            this.errorMessage = "Session not found.";
+            this.dialogError = true;
+          }
       });
     },
   },
