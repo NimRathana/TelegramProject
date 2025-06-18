@@ -226,12 +226,12 @@
                                   </v-icon>
                               </v-btn>
                           </template>
-                          <v-list>
+                          <v-list min-width="150">
                               <v-list-item @click="ChangeTheme('light')">
-                                  <v-list-item-title><v-icon>mdi-weather-sunny</v-icon>light_theme</v-list-item-title>
+                                  <v-list-item-title><v-icon>mdi-weather-sunny</v-icon>Light</v-list-item-title>
                               </v-list-item>
                               <v-list-item @click="ChangeTheme('dark')">
-                                  <v-list-item-title><v-icon>mdi-weather-night</v-icon>dark_theme</v-list-item-title>
+                                  <v-list-item-title><v-icon>mdi-weather-night</v-icon>Dark</v-list-item-title>
                               </v-list-item>
                           </v-list>
                       </v-menu>
@@ -260,20 +260,20 @@
                                       <template #prepend>
                                           <VIcon class="me-2" icon="mdi-account-tie" size="22" />
                                       </template>
-                                      <VListItemTitle>profile</VListItemTitle>
+                                      <VListItemTitle>Profile</VListItemTitle>
                                   </VListItem>
                                   <VListItem link>
                                       <template #prepend>
                                           <VIcon class="me-2" icon="mdi-home-account" size="22" />
                                       </template>
-                                      <VListItemTitle>home</VListItemTitle>
+                                      <VListItemTitle>Home</VListItemTitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
                                   <VListItem link @click="logout(user)">
                                       <template #prepend>
                                           <VIcon class="me-2" icon="mdi-logout" size="22" />
                                       </template>
-                                      <VListItemTitle>logout</VListItemTitle>
+                                      <VListItemTitle>Logout</VListItemTitle>
                                   </VListItem>
                               </VList>
                           </VMenu>
