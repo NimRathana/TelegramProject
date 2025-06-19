@@ -4,8 +4,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
-    "postinstall": "cd ../frontend && npm install && npm run build && mkdir -p ../backend/public && npx cpy \"dist/**\" ../backend/public --cwd=../frontend --parents"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
