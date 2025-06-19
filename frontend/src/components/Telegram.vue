@@ -69,15 +69,6 @@
                   <span class="font-weight-regular d-flex" v-if="item.type === 'group' || item.type === 'supergroup'">{{ item.name }} <p class="ml-2 text-disabled">({{ item.membersCount }} members)</p> </span>
                   <span class="font-weight-regular d-flex" v-else>{{ item.name }}</span>
                 </template>
-                <template #append="{ item, isSelected, isIndeterminate, select }">
-                  <v-checkbox
-                    :model-value="isSelected"
-                    :indeterminate="isIndeterminate"
-                    @click.stop="select(!isSelected)"
-                    density="compact"
-                    hide-details
-                  />
-                </template>
               </v-treeview>
               <div v-else class="text-center mt-4 h-100">No groups found. Fetch your groups using the button above.</div>
             </div>
