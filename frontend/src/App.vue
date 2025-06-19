@@ -303,7 +303,7 @@
                               color: appStore.color,
                               variant: appStore.skin == 'bordered' ? 'outlined' : 'solo',
                               clearable: true,
-                              density: 'comfortable'
+                              density: 'compact'
                             },
                             VSelect: {
                               color: appStore.color,

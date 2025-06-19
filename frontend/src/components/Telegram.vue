@@ -10,17 +10,32 @@
         <v-col v-if="showPassword" cols="12" md="3">
           <v-text-field label="Password" v-model="password" :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'" @click:append-inner="visible = !visible" />
         </v-col>
-        <v-col cols="12" md="3" class="align-center">
-          <v-btn v-if="showBtnLogin" @click="SendCode()">Login</v-btn>
-          <v-btn v-if="!showBtnLogin" @click="GetAllGroup">Get Group</v-btn>
+        <v-col v-if="showBtnLogin" cols="12" md="3" class="align-center">
+          <v-btn @click="SendCode()">Login</v-btn>
         </v-col>
     </v-row>
 
     <v-row class="w-100" style="flex: 1 1 auto; overflow: hidden;">
       <v-col cols="6" class="h-100">
         <div class="h-100 d-flex justify-center">
-          <v-card class="treeview-card w-100 h-100">
+          <v-card class="w-100 h-100 d-flex flex-column">
+            <div class="treeview-wrapper flex-grow-1 d-flex flex-column">
+              <v-row class="ma-0 pa-2" no-gutters>
+                <v-col cols="12" class="d-flex" style="gap: 8px;">
+                  <v-text-field
+                    v-model="search"
+                    label="Search Directory"
+                    dense
+                    prepend-inner-icon="mdi-magnify"
+                    hide-details
+                    single-line
+                    style="max-height: 40px; flex-grow: 1;"
+                  ></v-text-field>
+                  <v-btn v-if="!showBtnLogin" @click="GetAllGroup" class="ml-2" style="height: 40px;">Get Group</v-btn>
+                </v-col>
+              </v-row>
               <v-treeview
+                v-if="items.length > 0"
                 :items="items"
                 item-value="id"
                 item-title="name"
@@ -30,10 +45,11 @@
                 select-strategy="classic"
                 activatable
                 hoverable
+                :search="search"
+                :filter="filter"
                 @click:select="SelectedItem"
                 @click:open="OpenItem"
-                @update:activated="TreeViewHeight"
-                style="height: 300px;"
+                class="flex-grow-1 h-100"
               >
                 <template #prepend="{ item }">
                   <v-avatar size="40" class="ml-1 pa-1">
@@ -44,12 +60,14 @@
                           <v-icon class="white--text" small>mdi-account-group</v-icon>
                       </template>
                   </v-avatar>
-              </template>
-              <template #title="{ item }">
+                </template>
+                <template #title="{ item }">
                   <span class="font-weight-regular d-flex" v-if="item.type === 'group' || item.type === 'supergroup'">{{ item.name }} <p class="ml-2 text-disabled">({{ item.membersCount }} members)</p> </span>
                   <span class="font-weight-regular d-flex" v-else>{{ item.name }}</span>
-              </template>
+                </template>
               </v-treeview>
+              <div v-else class="text-center mt-4 h-100">No groups found. Fetch your groups using the button above.</div>
+            </div>
           </v-card>
         </div>
       </v-col>
@@ -164,12 +182,11 @@ export default {
       tree: [],
       types: [],
       items: [],
+      search: null,
     }
   },
   mounted(){
     useHead({ title: 'Telegram' })
-
-    this.TreeViewHeight();
 
     if (this.userStore.session && this.userStore.user != "undefined") {
       this.loadingState.startLoading();
@@ -193,6 +210,16 @@ export default {
       this.showPhone = true;
       this.showBtnLogin = true;
     }
+  },
+  computed: {
+    filter() {
+      return (item, search, textKey) => {
+          if (!search) return true;
+          const itemText = (item[textKey] || '').toString().toLowerCase();
+          const searchText = search.toString().toLowerCase();
+          return itemText.includes(searchText);
+      };
+    },
   },
   watch: {
     'userStore.session'(val){
@@ -258,27 +285,42 @@ export default {
         }
         this.loadingState.stopLoading();
       }).catch((e)=>{
-        console.log(e);
-        this.showMessage = e.response.data.error;
+        if(e.response.data.error == "PHONE_NUMBER_BANNED"){
+          this.showMessage = "The provided phone number is banned from telegram";
+        } else if(e.response.data.error == "PHONE_NUMBER_INVALID"){
+          this.showMessage = "Invalid phone number";
+        } else if(e.response.data.error == "API_ID_INVALID"){
+          this.showMessage = "API ID invalid";
+        } else if(e.response.data.error == "API_ID_PUBLISHED_FLOOD"){
+          this.showMessage = "This API id was published somewhere, you can't use it now";
+        } else if(e.response.data.error == "AUTH_KEY_PERM_EMPTY"){
+          this.showMessage = "The temporary auth key must be binded to the permanent auth key to use these methods.";
+        } else if(e.response.data.error == "INPUT_REQUEST_TOO_LONG"){
+          this.showMessage = "The request is too big";
+        } else if(e.response.data.error == "NETWORK_MIGRATE_X"){
+          this.showMessage = "Repeat the query to data-center X";
+        } else if(e.response.data.error == "PHONE_MIGRATE_X"){
+          this.showMessage = "Repeat the query to data-center X";
+        } else if(e.response.data.error == "PHONE_NUMBER_APP_SIGNUP_FORBIDDEN"){
+          this.showMessage = "You can't sign up using this app";
+        } else if(e.response.data.error == "PHONE_NUMBER_FLOOD"){
+          this.showMessage = "You asked for the code too many times.";
+        } else if(e.response.data.error == "PHONE_NUMBER_INVALID"){
+          this.showMessage = "Invalid phone number";
+        } else if(e.response.data.error == "PHONE_PASSWORD_FLOOD"){
+          this.showMessage = "You have tried logging in too many times";
+        } else if(e.response.data.error == "PHONE_PASSWORD_PROTECTED"){
+          this.showMessage = "This phone is password protected";
+        } else if(e.response.data.error == "SMS_CODE_CREATE_FAILED"){
+          this.showMessage = "An error occurred while creating the SMS code";
+        } else if(e.response.data.error == "authParams.onError is not a function"){
+          this.showMessage = "Invalid Code";
+        } else{
+          this.showMessage = e.response.data.error;
+        }
         this.dialogError = true;
         this.loadingState.stopLoading();
       })
-    },
-    TreeViewHeight(){
-      const treeviewCard = document.querySelector('.treeview-card');
-      const footer = document.querySelector('.v-footer');
-
-      if (treeviewCard && footer) {
-        const resizeObserver = new ResizeObserver(entries => {
-          for (let entry of entries) {
-            const footerHeight = $(footer).outerHeight(true) - 23;
-            const newHeight = entry.contentRect.height - footerHeight;
-            $('.v-treeview').height(newHeight);
-          }
-        });
-
-        resizeObserver.observe(treeviewCard);
-      }
     },
     GetAllGroup(){
       if(this.userStore.user != "undefined"){
@@ -288,7 +330,6 @@ export default {
           phone: phone,
         }).then((res)=>{
           this.items = res.data.groups;
-          this.TreeViewHeight();
           this.loadingState.stopLoading();
         }).catch((e)=>{
           console.log(e);
@@ -299,7 +340,6 @@ export default {
       }
     },
     SelectedItem(item){
-      this.TreeViewHeight();
     },
     OpenItem(item){
       if(this.userStore.user != "undefined"){
@@ -337,7 +377,6 @@ export default {
               }
             });
           }
-          this.TreeViewHeight();
           this.loadingState.stopLoading();
         }).catch((e)=>{
           console.log(e);
@@ -348,9 +387,9 @@ export default {
       }
     },
     clear(){
-      this.phone = false;
-      this.code = false;
-      this.password = false;
+      this.phone = null;
+      this.code = null;
+      this.password = null;
     },
   },
 }
@@ -366,10 +405,20 @@ export default {
   flex-direction: column;
   min-height: 0;
 }
-
 .quill-editor {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+}
+.treeview-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.treeview-content {
+  height: 100%;
   overflow-y: auto;
 }
 </style>
