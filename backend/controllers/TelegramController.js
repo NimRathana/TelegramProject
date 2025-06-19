@@ -38,6 +38,9 @@ function deleteSession(phone) {
 }
 
 class TelegramController {
+    static async Test(req, res){
+        res.json({ data: "Test" })
+    }
     static async SendCode(req, res) {
         const { phone } = req.body;
 
