@@ -17,7 +17,7 @@ export default defineConfig(({ mode })=>{
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-      plugins: [
+    plugins: [
       VueRouter(),
       Layouts(),
       Vue({
@@ -78,7 +78,7 @@ export default defineConfig(({ mode })=>{
       ],
     },
     server: {
-      port: 3000,
+      port: env.PORT || 3000,
     },
     css: {
       preprocessorOptions: {

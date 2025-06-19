@@ -32,6 +32,7 @@
                     style="max-height: 40px; flex-grow: 1;"
                   ></v-text-field>
                   <v-btn v-if="!showBtnLogin" @click="GetAllGroup" class="ml-2" style="height: 40px;">Get Group</v-btn>
+                  <v-btn v-if="!showBtnLogin" @click="SendMessage" class="ml-2" style="height: 40px;">Send Message</v-btn>
                 </v-col>
               </v-row>
               <v-treeview
@@ -45,9 +46,12 @@
                 select-strategy="classic"
                 activatable
                 hoverable
+                return-object
                 :search="search"
                 :filter="filter"
+                :load-children="OpenItem"
                 @click:select="SelectedItem"
+                @update:selected="UpdateItem"
                 @click:open="OpenItem"
                 class="flex-grow-1 h-100"
               >
@@ -64,6 +68,15 @@
                 <template #title="{ item }">
                   <span class="font-weight-regular d-flex" v-if="item.type === 'group' || item.type === 'supergroup'">{{ item.name }} <p class="ml-2 text-disabled">({{ item.membersCount }} members)</p> </span>
                   <span class="font-weight-regular d-flex" v-else>{{ item.name }}</span>
+                </template>
+                <template #append="{ item, isSelected, isIndeterminate, select }">
+                  <v-checkbox
+                    :model-value="isSelected"
+                    :indeterminate="isIndeterminate"
+                    @click.stop="select(!isSelected)"
+                    density="compact"
+                    hide-details
+                  />
                 </template>
               </v-treeview>
               <div v-else class="text-center mt-4 h-100">No groups found. Fetch your groups using the button above.</div>
@@ -123,7 +136,6 @@ import { useAppStore } from '@/stores/app'
 import axios from 'axios'
 import { useLoadingState } from '@/stores/loading'
 import { useUserStore } from '@/stores/userstore'
-import $ from 'jquery'
 
 export default {
   data() {
@@ -179,10 +191,14 @@ export default {
       }),
       visible: false,
       snackbar: false,
-      tree: [],
-      types: [],
+      itemSelected: {
+        groups: [],
+        users: [],
+        usersRemove: []
+      },
       items: [],
       search: null,
+      fetchedGroupIds: [],
     }
   },
   mounted(){
@@ -194,14 +210,14 @@ export default {
       axios.post(process.env.APP_URL + '/api/Reconnect', { phone: phone.phone })
       .then((res) => {
         this.userStore.setUser(res.data.user);
-        this.showMessage = "logged in.!"
+        this.showMessage = "you're logged in."
         this.snackbar = true;
         this.showPhone = false;
         this.showBtnLogin = false;
         this.loadingState.stopLoading();
       })
       .catch((err) => {
-          localStorage.clear();
+          // localStorage.clear();
           this.showMessage = "Session expired, please log in again.";
           this.dialogError = true;
           this.loadingState.stopLoading();
@@ -340,14 +356,106 @@ export default {
       }
     },
     SelectedItem(item){
+      const selectedId = item.path[0];
+      const selectedUserId = item.path[1];
+
+      const index = this.itemSelected.groups.indexOf(selectedId);
+      const userIdIndex = this.itemSelected.users.indexOf(selectedUserId);
+
+
+      if (item.path[0] === item.id) {
+        if (item.value === true) {
+          // Add if not already in the list
+          if (index === -1) {
+            this.itemSelected.groups.push(selectedId);
+          }
+        } else {
+          // Remove if exists
+          if (index !== -1) {
+            this.itemSelected.groups.splice(index, 1);
+          }
+        }
+      }
+
+      if(item.path[1] == item.id){
+        if(item.value == false){
+          if(userIdIndex !== -1){
+            this.itemSelected.users.splice(userIdIndex, 1);
+            if (!this.itemSelected.usersRemove.includes(selectedUserId)) {
+              this.itemSelected.usersRemove.push(selectedUserId);
+            }
+          }
+        }
+      }
     },
-    OpenItem(item){
+    UpdateItem(item){
+      this.itemSelected.users = this.itemSelected.users.filter(user =>
+        item.includes(user)
+      );
+
+      item.forEach(id => {
+        const exists = this.itemSelected.users.some(user => user === id);
+        if (!exists) {
+          this.itemSelected.users.push(id);
+
+          // If this user was in the "removed" list, remove from there
+          const removeIndex = this.itemSelected.usersRemove.indexOf(id);
+          if (removeIndex !== -1) {
+            this.itemSelected.usersRemove.splice(removeIndex, 1);
+          }
+        }
+      });
+      console.log(this.itemSelected)
+    },
+    SendMessage(){
+      if(this.itemSelected.users.length < 1){
+        this.showMessage = "please select user";
+        this.dialogError = true;
+      }else{
+        if(this.userStore.user != "undefined"){
+          const phone = JSON.parse(this.userStore.user.phone)
+          this.loadingState.startLoading();
+          axios.post(process.env.APP_URL + '/api/SendMessage', {
+            phone: phone,
+            user: this.itemSelected.users.map(u => ({
+              id: u.id,
+              groupId: u.groupId,
+              name: u.name
+            })),
+            text: this.$refs.descriptionEditor?.getHTML()
+          }).then((res)=>{
+            this.showMessage = res.data.message;
+            this.snackbar = true;
+            this.loadingState.stopLoading();
+          }).catch((e)=>{
+            console.log(e);
+            this.showMessage = e.response.data.error;
+            this.dialogError = true;
+            this.loadingState.stopLoading();
+          })
+        }
+      }
+    },
+    async OpenItem(item){
+      let id;
+
+      if (typeof item.id === 'object' && item.id !== null && 'id' in item.id) {
+        id = item.id.id;
+      } else {
+        id = item.id;
+      }
+
+      // Skip if this item (group) has already been fetched
+      if (this.fetchedGroupIds.includes(id)) return;
+
+      // Track this group as fetched
+      this.fetchedGroupIds.push(id);
       if(this.userStore.user != "undefined"){
         const phone = JSON.parse(this.userStore.user.phone)
         this.loadingState.startLoading();
-        axios.post(process.env.APP_URL + '/api/GetAllGroupMembers', {
+        await axios.post(process.env.APP_URL + '/api/GetAllGroupMembers', {
           phone: phone,
-          id: item.id
+          id: id
         }).then((res)=>{
           const members = res.data.members;
           const groupIndex = this.items.findIndex(group => group.id === members[0].groupId);
@@ -371,6 +479,7 @@ export default {
                   name: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim(),
                   firstName: member.firstName,
                   lastName: member.lastName,
+                  type: member.type,
                   photoUrl: member.photoUrl,
                   // children: [],
                 });

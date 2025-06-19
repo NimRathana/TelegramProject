@@ -417,6 +417,7 @@ class TelegramController {
                     name: user.firstName == null ? '' : user.firstName + ' ' + (user.lastName == null ? '' : user.lastName),
                     firstName: user.firstName,
                     lastName: user.lastName,
+                    type: 'member',
                     photoUrl: photoUrl,
                 });
             }
@@ -425,6 +426,55 @@ class TelegramController {
 
         } catch (err) {
             res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
+
+    static async SendMessage(req, res){
+        try {
+            const { phone, user, text } = req.body;
+
+             const phoneStr = String(phone);
+
+            const sessionString = loadSession(phoneStr.slice(3));
+            if (!sessionString) {
+                return res.status(400).json({ error: "No saved session found" });
+            }
+
+            const stringSession = new StringSession(sessionString);
+            const client = new TelegramClient(stringSession, apiId, apiHash, {
+                autoReconnect: true,
+                useWSS: false,
+            });
+
+            await client.connect();
+
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phoneStr.slice(3));
+                return res.status(401).json({ error: "Session expired. Please log in again." });
+            }
+
+            await client.connect();
+
+            for (const u of user) {
+                if (!u.id) continue;
+
+                try {
+                    await client.sendMessage(Number(u.id), {
+                        message: text,
+                        parseMode: 'html',
+                    });
+                } catch (innerError) {
+                    console.error(`Failed to message user ${u.id}:`, innerError.message);
+                }
+            }
+
+            await client.disconnect();
+            res.status(200).json({ message: 'Messages sent successfully.' });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Failed to send messages.' });
         }
     }
 }
