@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
   state: () => ({
-    theme: localStorage.getItem('theme') || 'light',
+    theme: localStorage.getItem('theme') || 'dark',
     color: localStorage.getItem('color') || '#409eff',
     skin: localStorage.getItem('skin') || 'default',
     layout: localStorage.getItem('layout') || 'Vertical',

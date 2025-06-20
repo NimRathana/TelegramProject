@@ -376,7 +376,7 @@ export default {
       appStore: useAppStore(),
       loadingState: useLoadingState(),
       userStore: useUserStore(),
-      theme: localStorage.getItem('theme') || 'dark',
+      theme: 'dark',
       toggleRightDrawer: false,
       colors: ['#FF5733', '#33FF57', '#3357FF', '#F1C40F'],
       selectedColor: useAppStore().color || 'grey-darken-3',
