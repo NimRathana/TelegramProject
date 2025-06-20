@@ -209,6 +209,8 @@ export default {
       })
       .catch((err) => {
           // localStorage.clear();
+          this.showPhone = true;
+          this.showBtnLogin = true;
           this.showMessage = "Session expired, please log in again.";
           this.dialogError = true;
           this.loadingState.stopLoading();
