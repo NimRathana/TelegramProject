@@ -1,27 +1,59 @@
 <template>
   <v-container fluid class="fill-height d-flex flex-column pa-0">
-    <v-row class="w-100" style="flex: 0 0 auto;">
-        <v-col v-if="showPhone" cols="12" md="3">
-          <v-text-field label="Phone" v-model="phone" />
-        </v-col>
-        <v-col v-if="showCode" cols="12" md="3">
-          <v-text-field label="Code" v-model="code" />
-        </v-col>
-        <v-col v-if="showPassword" cols="12" md="3">
-          <v-text-field label="Password" v-model="password" :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'" :type="visible ? 'text' : 'password'" @click:append-inner="visible = !visible" />
-        </v-col>
-        <v-col v-if="showBtnLogin" cols="12" md="3" class="align-center">
-          <v-btn @click="SendCode()">Login</v-btn>
-        </v-col>
+    <!-- Top Row: Inputs -->
+    <v-row class="w-100 mb-2" style="flex: 0 0 auto;" dense>
+      <!-- Phone Input -->
+      <v-col v-if="showPhone" cols="12" md="3">
+        <v-text-field
+          label="Phone"
+          v-model="phone"
+          class="responsive-text"
+          hide-details
+          dense
+        />
+      </v-col>
+
+      <!-- Code Input -->
+      <v-col v-if="showCode" cols="12" md="3">
+        <v-text-field
+          label="Code"
+          v-model="code"
+          class="responsive-text"
+          hide-details
+          dense
+        />
+      </v-col>
+
+      <!-- Password Input -->
+      <v-col v-if="showPassword" cols="12" md="3">
+        <v-text-field
+          label="Password"
+          v-model="password"
+          class="responsive-text"
+          hide-details
+          dense
+          :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visible ? 'text' : 'password'"
+          @click:append-inner="visible = !visible"
+        />
+      </v-col>
+
+      <!-- Login Button -->
+      <v-col v-if="showBtnLogin" cols="12" md="3" class="d-flex">
+        <v-btn @click="SendCode()" class="responsive-btn">Login</v-btn>
+      </v-col>
     </v-row>
 
-    <v-row class="w-100" style="flex: 1 1 auto; overflow: hidden;">
-      <v-col cols="6" class="h-100">
+    <!-- Main Row: Treeview & Editor -->
+    <v-row class="w-100" style="flex: 1 1 auto; overflow: hidden;" no-gutters>
+      <!-- Treeview -->
+      <v-col cols="12" md="6" class="h-50 h-md-100">
         <div class="h-100 d-flex justify-center">
           <v-card class="w-100 h-100 d-flex flex-column">
-            <div class="treeview-wrapper flex-grow-1 d-flex flex-column">
+            <div class="treeview-wrapper flex-grow-1 d-flex flex-column" style="overflow-y: auto;">
+              <!-- Search and Action Buttons -->
               <v-row class="ma-0 pa-2" no-gutters>
-                <v-col cols="12" class="d-flex" style="gap: 8px;">
+                <v-col cols="12" class="d-flex flex-wrap" style="gap: 8px;">
                   <v-text-field
                     v-model="search"
                     label="Search Directory"
@@ -29,12 +61,27 @@
                     prepend-inner-icon="mdi-magnify"
                     hide-details
                     single-line
+                    class="responsive-text"
                     style="max-height: 40px; flex-grow: 1;"
-                  ></v-text-field>
-                  <v-btn v-if="!showBtnLogin" @click="GetAllGroup" class="ml-2" style="height: 40px;">Get Group</v-btn>
-                  <v-btn v-if="!showBtnLogin" @click="SendMessage" class="ml-2" style="height: 40px;">Send Message</v-btn>
+                  />
+                  <v-btn
+                    v-if="!showBtnLogin"
+                    @click="GetAllGroup"
+                    class="ml-2 responsive-btn"
+                  >
+                    Get Group
+                  </v-btn>
+                  <v-btn
+                    v-if="!showBtnLogin"
+                    @click="SendMessage"
+                    class="ml-2 responsive-btn"
+                  >
+                    Send Message
+                  </v-btn>
                 </v-col>
               </v-row>
+
+              <!-- Treeview -->
               <v-treeview
                 v-if="items.length > 0"
                 :items="items"
@@ -57,27 +104,42 @@
               >
                 <template #prepend="{ item }">
                   <v-avatar size="40" class="ml-1 pa-1">
-                      <template v-if="item.photoUrl && item.photoUrl != 'data:image/jpeg;base64,'">
-                          <img :src="item.photoUrl" alt="Group photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" />
-                      </template>
-                      <template v-else>
-                          <v-icon class="white--text" small>mdi-account-group</v-icon>
-                      </template>
+                    <template v-if="item.photoUrl && item.photoUrl != 'data:image/jpeg;base64,'">
+                      <img
+                        :src="item.photoUrl"
+                        alt="Group photo"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;"
+                      />
+                    </template>
+                    <template v-else>
+                      <v-icon class="white--text" small>mdi-account-group</v-icon>
+                    </template>
                   </v-avatar>
                 </template>
+
                 <template #title="{ item }">
-                  <span class="font-weight-regular d-flex" v-if="item.type === 'group' || item.type === 'supergroup'">{{ item.name }} <p class="ml-2 text-disabled">({{ item.membersCount }} members)</p> </span>
-                  <span class="font-weight-regular d-flex" v-else>{{ item.name }}</span>
+                  <span class="font-weight-regular d-flex responsive-text" v-if="item.type === 'group' || item.type === 'supergroup'">
+                    {{ item.name }}
+                    <p class="ml-2 responsive-subtext">({{ item.membersCount }} members)</p>
+                  </span>
+                  <span class="font-weight-regular d-flex responsive-text" v-else>
+                    {{ item.name }}
+                  </span>
                 </template>
               </v-treeview>
-              <div v-else class="text-center mt-4 h-100">No groups found. Fetch your groups using the button above.</div>
+
+              <!-- No Data Fallback -->
+              <div v-else class="text-center mt-4 h-100 responsive-text">
+                No groups found. Fetch your groups using the button above.
+              </div>
             </div>
           </v-card>
         </div>
       </v-col>
 
-      <v-col cols="6" class="h-100">
-        <div class="editor-wrapper h-100">
+      <!-- Quill Editor -->
+      <v-col cols="12" md="6" class="h-50 h-md-100">
+        <div class="editor-wrapper h-100" style="overflow-y: auto;">
           <QuillEditor
             content-type="html"
             :options="options"
@@ -510,6 +572,10 @@ export default {
 }
 .treeview-content {
   height: 100%;
+  overflow-y: auto;
+}
+.treeview-wrapper,
+.editor-wrapper {
   overflow-y: auto;
 }
 </style>

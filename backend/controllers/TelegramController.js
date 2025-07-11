@@ -462,11 +462,18 @@ class TelegramController {
             for (const u of user) {
                 if (!u.id) continue;
 
+                let entity;
+                try {
+                    entity = await client.getInputEntity(Number(u.id));
+                } catch (e) {
+                    console.warn(`Skipping user ${u.id}: ${e.message}`);
+                    continue; // Skip users who can't be resolved
+                }
+
                 try {
                     const parts = [];
                     let imageIndex = 0;
 
-                    // Match <p>text</p>, <img>, and <iframe>
                     const regex = /<p>(.*?)<\/p>|<img[^>]+src="data:(image\/[^;]+);base64,([^"]+)"[^>]*>|<iframe[^>]+src="([^"]+)"[^>]*><\/iframe>/gi;
 
                     let match;
@@ -510,7 +517,7 @@ class TelegramController {
                             });
                         }
 
-                        // <iframe src="...">
+                        // <iframe> (video)
                         else if (match[4]) {
                             const videoUrl = match[4];
                             parts.push({
@@ -520,28 +527,28 @@ class TelegramController {
                         }
                     }
 
-                    // Send each part in order
+                    // Send each part
                     for (const part of parts) {
                         if (part.type === 'text') {
-                            await client.sendMessage(Number(u.id), {
+                            await client.sendMessage(entity, {
                                 message: part.content,
                                 parseMode: 'html'
                             });
                         } else if (part.type === 'image') {
-                            await client.sendFile(Number(u.id), {
+                            await client.sendFile(entity, {
                                 file: part.buffer,
-                                parseMode: 'html',
                                 attributes: [
                                     new Api.DocumentAttributeFilename({ fileName: part.name })
                                 ]
                             });
                         } else if (part.type === 'video') {
-                            await client.sendMessage(Number(u.id), {
-                                message: `${part.url}`,
+                            await client.sendMessage(entity, {
+                                message: part.url,
                                 parseMode: 'html'
                             });
                         }
                     }
+
                 } catch (err) {
                     console.error(`Failed to message user ${u.id}:`, err.message);
                 }

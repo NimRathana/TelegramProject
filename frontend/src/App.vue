@@ -18,7 +18,7 @@
                 </v-toolbar>
                 <v-container>
                     <v-list-item-title class="mt-2">Primary Color</v-list-item-title>
-                    <div class="pa-0 ma-0 mt-3 d-flex" style="gap: 10px;">
+                    <div class="pa-0 ma-0 mt-3 d-flex" style="gap: 10px;overflow-y: auto;">
                         <v-btn
                           v-for="(color, index) in colors"
                           :key="index"
@@ -81,7 +81,7 @@
                     <div class="pa-0 ma-0 mt-3">
                         <v-row>
                             <v-col cols="4">
-                                <v-btn :color="selectedSkin === 'default' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectSkin('default')">
+                                <v-btn :color="selectedSkin === 'default' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectSkin('default')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/skin-default.png"
@@ -94,7 +94,7 @@
                             </v-col>
 
                             <v-col cols="4">
-                                <v-btn :color="selectedSkin === 'bordered' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectSkin('bordered')">
+                                <v-btn :color="selectedSkin === 'bordered' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectSkin('bordered')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/skin-border.png"
@@ -114,7 +114,7 @@
                     <div class="pa-0 ma-0 mt-2">
                         <v-row>
                             <v-col cols="4">
-                                <v-btn :color="selectedLayout === 'Vertical' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Vertical')">
+                                <v-btn :color="selectedLayout === 'Vertical' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Vertical')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/skin-default.png"
@@ -127,7 +127,7 @@
                             </v-col>
 
                             <v-col cols="4">
-                                <v-btn :color="selectedLayout === 'Collapsed' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Collapsed')">
+                                <v-btn :color="selectedLayout === 'Collapsed' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Collapsed')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Collapsed.png"
@@ -140,7 +140,7 @@
                             </v-col>
 
                             <v-col cols="4">
-                                <v-btn :color="selectedLayout === 'Horizontal' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Horizontal')">
+                                <v-btn :color="selectedLayout === 'Horizontal' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectLayout('Horizontal')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Horizontal.png"
@@ -157,7 +157,7 @@
                     <div class="pa-0 ma-0 mt-3">
                         <v-row>
                             <v-col cols="4">
-                                <v-btn :color="selectedContent === 'Compact' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectContent('Compact')">
+                                <v-btn :color="selectedContent === 'Compact' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectContent('Compact')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Compact.png"
@@ -170,7 +170,7 @@
                             </v-col>
 
                             <v-col cols="4">
-                                <v-btn :color="selectedContent === 'Wide' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectContent('Wide')">
+                                <v-btn :color="selectedContent === 'Wide' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectContent('Wide')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Wide.png"
@@ -187,7 +187,7 @@
                     <div class="pa-0 ma-0 mt-3">
                         <v-row>
                             <v-col cols="4">
-                                <v-btn :color="selectedDirection === 'Left' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectDirection('Left')">
+                                <v-btn :color="selectedDirection === 'Left' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectDirection('Left')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Left-to-right.png"
@@ -200,7 +200,7 @@
                             </v-col>
 
                             <v-col cols="4">
-                                <v-btn :color="selectedDirection === 'Right' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectDirection('Right')">
+                                <v-btn :color="selectedDirection === 'Right' ? appStore.color : 'transparent'" height="70" class="pa-0" variant="outlined" @click="selectDirection('Right')" style="overflow: hidden;">
                                     <v-card color="transparent" style="box-shadow: none;" class="d-flex align-center justify-center">
                                         <img
                                             src="./assets/Right-to-left.png"
