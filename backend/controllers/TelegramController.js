@@ -463,12 +463,87 @@ class TelegramController {
                 if (!u.id) continue;
 
                 try {
-                    await client.sendMessage(Number(u.id), {
-                        message: text,
-                        parseMode: 'html',
-                    });
-                } catch (innerError) {
-                    console.error(`Failed to message user ${u.id}:`, innerError.message);
+                    const parts = [];
+                    let imageIndex = 0;
+
+                    // Match <p>text</p>, <img>, and <iframe>
+                    const regex = /<p>(.*?)<\/p>|<img[^>]+src="data:(image\/[^;]+);base64,([^"]+)"[^>]*>|<iframe[^>]+src="([^"]+)"[^>]*><\/iframe>/gi;
+
+                    let match;
+                    while ((match = regex.exec(text)) !== null) {
+                        // <p>...</p>
+                        if (match[1]) {
+                            const paragraph = match[1].trim();
+
+                            // Image inside <p>
+                            const imgMatch = paragraph.match(/<img[^>]+src="data:(image\/[^;]+);base64,([^"]+)"[^>]*>/);
+                            if (imgMatch) {
+                                const mimeType = imgMatch[1];
+                                const base64 = imgMatch[2];
+                                const extension = mimeType.split('/')[1];
+
+                                parts.push({
+                                    type: 'image',
+                                    buffer: Buffer.from(base64, 'base64'),
+                                    name: `image_${++imageIndex}.${extension}`,
+                                    mimeType
+                                });
+                            } else if (paragraph.replace(/<[^>]+>/g, '').trim()) {
+                                parts.push({
+                                    type: 'text',
+                                    content: paragraph
+                                });
+                            }
+                        }
+
+                        // Standalone <img>
+                        else if (match[2] && match[3]) {
+                            const mimeType = match[2];
+                            const base64 = match[3];
+                            const extension = mimeType.split('/')[1];
+
+                            parts.push({
+                                type: 'image',
+                                buffer: Buffer.from(base64, 'base64'),
+                                name: `image_${++imageIndex}.${extension}`,
+                                mimeType
+                            });
+                        }
+
+                        // <iframe src="...">
+                        else if (match[4]) {
+                            const videoUrl = match[4];
+                            parts.push({
+                                type: 'video',
+                                url: videoUrl
+                            });
+                        }
+                    }
+
+                    // Send each part in order
+                    for (const part of parts) {
+                        if (part.type === 'text') {
+                            await client.sendMessage(Number(u.id), {
+                                message: part.content,
+                                parseMode: 'html'
+                            });
+                        } else if (part.type === 'image') {
+                            await client.sendFile(Number(u.id), {
+                                file: part.buffer,
+                                parseMode: 'html',
+                                attributes: [
+                                    new Api.DocumentAttributeFilename({ fileName: part.name })
+                                ]
+                            });
+                        } else if (part.type === 'video') {
+                            await client.sendMessage(Number(u.id), {
+                                message: `${part.url}`,
+                                parseMode: 'html'
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Failed to message user ${u.id}:`, err.message);
                 }
             }
 
