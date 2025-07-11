@@ -67,14 +67,14 @@
                   <v-btn
                     v-if="!showBtnLogin"
                     @click="GetAllGroup"
-                    class="ml-2 responsive-btn"
+                    class="responsive-btn"
                   >
                     Get Group
                   </v-btn>
                   <v-btn
                     v-if="!showBtnLogin"
                     @click="SendMessage"
-                    class="ml-2 responsive-btn"
+                    class="responsive-btn"
                   >
                     Send Message
                   </v-btn>
