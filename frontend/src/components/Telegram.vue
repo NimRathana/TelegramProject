@@ -249,7 +249,7 @@ export default {
         url = "CheckPassword";
       }
       axios.post(process.env.APP_URL + '/api/' + url, {
-        phone: (this.phone || '').toString().replace(/\s+/g, ''),
+        phone: (this.phone || '').toString().replace(/\s+/g, '').replace(/^0/, ''),
         code: (this.code || '').toString().replace(/\s+/g, ''),
         password: this.password
       }).then((res)=>{
