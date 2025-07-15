@@ -422,6 +422,8 @@ class TelegramController {
                     lastName: user.lastName,
                     type: 'member',
                     photoUrl: photoUrl,
+                    phone: user.phone || null,
+                    username: user.username || null,
                 });
             }
 
@@ -464,7 +466,10 @@ class TelegramController {
 
                 let entity;
                 try {
-                    entity = await client.getInputEntity(Number(u.id));
+                    const participants = await client.getParticipants(u.groupId);
+                    entity = participants.find(p => {
+                        return p.id.toString() === u.id.toString();
+                    });
                 } catch (e) {
                     console.warn(`Skipping user ${u.id}: ${e.message}`);
                     continue; // Skip users who can't be resolved

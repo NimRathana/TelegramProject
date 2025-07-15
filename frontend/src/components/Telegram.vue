@@ -464,7 +464,8 @@ export default {
             user: this.itemSelected.users.map(u => ({
               id: u.id,
               groupId: u.groupId,
-              name: u.name
+              name: u.name,
+              username: u.username,
             })),
             text: this.$refs.descriptionEditor?.getHTML()
           }).then((res)=>{
@@ -525,6 +526,8 @@ export default {
                   lastName: member.lastName,
                   type: member.type,
                   photoUrl: member.photoUrl,
+                  phone: member.phone,
+                  username: member.username,
                   // children: [],
                 });
               }
