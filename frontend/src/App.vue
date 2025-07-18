@@ -240,7 +240,7 @@
                       <VAvatar class="cursor-pointer" color="primary" variant="tonal">
                           <VImg width="100" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
                           <VMenu activator="parent" width="230" location="bottom end" offset="14px">
-                              <VList>
+                              <VList density="compact" nav>
                                   <VListItem>
                                       <template #prepend>
                                           <VListItemAction start>
@@ -256,24 +256,30 @@
                                       <VListItemSubtitle>@{{ user?.username }}</VListItemSubtitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
-                                  <VListItem link>
+                                  <VListItem link to="/Profile">
                                       <template #prepend>
-                                          <VIcon class="me-2" icon="mdi-account-tie" size="22" />
+                                          <VIcon icon="mdi-account-tie" size="24" />
                                       </template>
-                                      <VListItemTitle>Profile</VListItemTitle>
+                                      <VListItemTitle>My Profile</VListItemTitle>
                                   </VListItem>
                                   <VListItem link>
                                       <template #prepend>
-                                          <VIcon class="me-2" icon="mdi-home-account" size="22" />
+                                          <VIcon icon="mdi-cog" size="24" />
                                       </template>
-                                      <VListItemTitle>Home</VListItemTitle>
+                                      <VListItemTitle>Setting</VListItemTitle>
+                                  </VListItem>
+                                  <VListItem link>
+                                      <template #prepend>
+                                          <VIcon icon="mdi-account-box" size="24" />
+                                      </template>
+                                      <VListItemTitle>Contacts</VListItemTitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
-                                  <VListItem link @click="logout(user)">
-                                      <template #prepend>
-                                          <VIcon class="me-2" icon="mdi-logout" size="22" />
-                                      </template>
-                                      <VListItemTitle>Logout</VListItemTitle>
+                                  <VListItem link variant="tonal" density="compact" active rounded class="mx-3 d-flex justify-center bg-red-accent-4" style="min-height: 30px;" @click="logout(user)">
+                                      <div class="d-flex align-center">
+                                        <VListItemTitle>Logout</VListItemTitle>
+                                        <VIcon class="ml-2" icon="mdi-logout" size="18" />
+                                      </div>
                                   </VListItem>
                               </VList>
                           </VMenu>
@@ -414,6 +420,10 @@ export default {
     }
   },
   methods: {
+    test(){
+      debugger
+      this.$router;
+    },
     ChangeTheme(newTheme) {
       this.appStore.setTheme(newTheme);
     },
@@ -498,6 +508,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 <style>
+.v-container>.v-main {
+    height: 100%;
+    padding: 0;
+}
 .setting_btn.rotate-animation {
   cursor: move;
   animation: spin 2s linear infinite;
@@ -505,12 +519,10 @@ document.addEventListener("DOMContentLoaded", function () {
 .description .ql-toolbar {
     display: none;
 }
-
 .description .ql-container {
     border: unset;
     font-family: 'Battambang';
 }
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);

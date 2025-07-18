@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     Loading: typeof import('./src/components/Loading.vue')['default']
+    Profile: typeof import('./src/pages/Profile.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Telegram: typeof import('./src/components/Telegram.vue')['default']
