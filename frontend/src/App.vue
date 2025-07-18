@@ -349,7 +349,20 @@
                             },
                             VTreeview: {
                               color: appStore.color
-                            }
+                            },
+                            VTabs: {
+                              showArrows: true,
+                              nextIcon: 'mdi-arrow-right-bold-box-outline',
+                              prevIcon: 'mdi-arrow-left-bold-box-outline',
+                              hideSlider: true,
+                              mobile: true,
+                              density: 'compact',
+                            },
+                            VTab: {
+                              class: 'mr-2 rounded',
+                              border: appStore.skin == 'bordered' ? true : false,
+                              selectedClass: appStore.skin == 'bordered' ? 'active-tab-border-bg' : 'active-tab-bg',
+                            },
                           }"
                         >
                           <v-container :fluid="appStore.content !== 'Compact'">
@@ -382,7 +395,7 @@ export default {
       appStore: useAppStore(),
       loadingState: useLoadingState(),
       userStore: useUserStore(),
-      theme: 'dark',
+      theme: useAppStore().theme || 'light',
       toggleRightDrawer: false,
       colors: ['#FF5733', '#33FF57', '#3357FF', '#F1C40F'],
       selectedColor: useAppStore().color || 'grey-darken-3',
@@ -420,10 +433,6 @@ export default {
     }
   },
   methods: {
-    test(){
-      debugger
-      this.$router;
-    },
     ChangeTheme(newTheme) {
       this.appStore.setTheme(newTheme);
     },
@@ -508,6 +517,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 <style>
+.active-tab-bg {
+  background: var(--active-tab-bg) !important;
+  color: white !important;
+}
 .v-container>.v-main {
     height: 100%;
     padding: 0;
