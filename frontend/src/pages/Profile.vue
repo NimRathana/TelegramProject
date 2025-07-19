@@ -15,7 +15,7 @@
 
             <!-- Name and Info -->
             <v-col cols="12" md="9" class="d-flex flex-column justify-center align-md-start align-center text-md-left text-center">
-              <span class="text-h5">{{ tgUser.fullName }}</span>
+              <span class="text-h5">{{ tgUser.fullName ? tgUser.fullName : 'UNKNOWN' }}</span>
               <!-- Desktop: 2nd line with phone + handle -->
               <div class="d-none d-md-flex flex-column text-subtitle-1 text-medium-emphasis">
                 <span>+{{ tgUser.phone ? tgUser.phone : '00000000' }}</span>
