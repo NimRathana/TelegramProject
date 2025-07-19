@@ -4,7 +4,7 @@
       <v-card elevation="1">
         <v-card-text style="position: relative;">
           <v-icon style="position: absolute; top: 16px; right: 16px;">mdi-pencil</v-icon>
-          <v-icon style="position: absolute; top: 16px; left: 16px;">mdi-qrcode</v-icon>
+          <v-icon style="position: absolute; top: 16px; left: 16px;" @click="generateQrCode">mdi-qrcode</v-icon>
           <v-row no-gutters>
             <!-- Profile Picture -->
             <v-col cols="12" md="3" class="d-flex justify-center">
@@ -15,16 +15,16 @@
 
             <!-- Name and Info -->
             <v-col cols="12" md="9" class="d-flex flex-column justify-center align-md-start align-center text-md-left text-center">
-              <span class="text-h5">Nim Rathana</span>
+              <span class="text-h5">{{ tgUser.fullName }}</span>
               <!-- Desktop: 2nd line with phone + handle -->
               <div class="d-none d-md-flex flex-column text-subtitle-1 text-medium-emphasis">
-                <span>+85581558087</span>
-                <span>@nimrathana</span>
+                <span>{{ tgUser.phone }}</span>
+                <span>{{ tgUser.username }}</span>
               </div>
 
               <!-- Mobile: All in one line -->
               <span class="text-subtitle-1 text-medium-emphasis d-md-none">
-                +85581558087 · @nimrathana
+                +{{ tgUser.phone }} · @{{ tgUser.username }}
               </span>
             </v-col>
           </v-row>
@@ -109,17 +109,64 @@
       </v-window>
     </v-col>
   </v-row>
+
+  <v-dialog v-model="qrDialog" max-width="400" persistent>
+    <template v-slot:default="{ isActive }">
+      <v-card rounded="lg">
+        <v-card-title class="d-flex justify-space-between align-center">
+          <div class="text-h6 text-medium-emphasis ps-2">
+            Scan QR Code
+          </div>
+
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="isActive.value = false"
+          ></v-btn>
+        </v-card-title>
+
+        <v-divider></v-divider>
+
+        <v-card-text>
+          <div class="d-flex justify-center">
+            <img v-if="qrCode" :src="qrCode" alt="QR Code" style="border-radius: 10px; max-width: 100%;" />
+            <p v-else>Click the QR icon to generate a code.</p>
+          </div>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="d-flex justify-end">
+          <v-btn
+            color="red"
+            text="Cancel"
+            @click="isActive.value = false"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+    </template>
+  </v-dialog>
 </template>
 
 <script>
 import { useHead } from '@vueuse/head'
 import { useAppStore } from '@/stores/app'
+import QRCode from 'qrcode';
 
 export default {
+  props: {
+    userId: {
+      type: String,
+    }
+  },
   data() {
     return {
+      qrCode: null,
+      qrDialog: false,
+      username: null,
+      tgUser: null,
       appStore: useAppStore(),
-      tab: 'posts', // ✅ initialize tab for v-model
+      tab: 'posts',
       posts: [
         { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
         { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
@@ -140,11 +187,28 @@ export default {
       ],
     };
   },
+  created() {
+    this.tgUser = JSON.parse(localStorage.getItem('tg_user')) || {};
+    this.username = this.tgUser.username || '';
+  },
   mounted() {
     useHead({ title: 'Profile' })
   },
   methods: {
+    async generateQrCode() {
+      if (!this.tgUser || !this.tgUser.username) {
+        return;
+      }
 
+      try {
+        const telegramUrl = `https://t.me/${this.username}`;
+
+        this.qrCode = await QRCode.toDataURL(telegramUrl);
+        this.qrDialog = true;
+      } catch (error) {
+        console.error('QR generation failed:', error);
+      }
+    }
   }
 };
 </script>

@@ -444,7 +444,7 @@ export default {
   },
   methods: {
     goTo(path) {
-      this.$router.push(path);
+      this.$router.push({ path: path });
     },
     ChangeTheme(newTheme) {
       this.appStore.setTheme(newTheme);

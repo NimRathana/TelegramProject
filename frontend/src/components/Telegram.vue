@@ -242,7 +242,7 @@ export default {
 
     if (this.userStore.session && this.userStore.user != "undefined") {
       this.loadingState.startLoading();
-      const phone = JSON.parse(this.userStore.user)
+      const phone = JSON.parse(this.userStore.user);
       axios.post(process.env.APP_URL + '/api/Reconnect', { phone: phone.phone })
       .then((res) => {
         this.userStore.setUser(res.data.user);
