@@ -7,7 +7,6 @@
         <v-text-field
           label="Phone"
           v-model="phone"
-          class="responsive-text"
           hide-details
           dense
         />
@@ -18,7 +17,6 @@
         <v-text-field
           label="Code"
           v-model="code"
-          class="responsive-text"
           hide-details
           dense
         />
@@ -29,7 +27,6 @@
         <v-text-field
           label="Password"
           v-model="password"
-          class="responsive-text"
           hide-details
           dense
           :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
@@ -40,7 +37,7 @@
 
       <!-- Login Button -->
       <v-col v-if="showBtnLogin" cols="12" md="3" class="d-flex">
-        <v-btn @click="SendCode()" class="responsive-btn">Login</v-btn>
+        <v-btn @click="SendCode()"><span class="responsive-btn">Login</span></v-btn>
       </v-col>
     </v-row>
 
@@ -61,22 +58,19 @@
                     prepend-inner-icon="mdi-magnify"
                     hide-details
                     single-line
-                    class="responsive-text"
                     style="max-height: 40px; flex-grow: 1;"
                   />
                   <v-btn
                     v-if="!showBtnLogin"
                     @click="GetAllGroup"
-                    class="responsive-btn"
                   >
-                    Get Group
+                    <span class="responsive-btn">Get Group</span>
                   </v-btn>
                   <v-btn
                     v-if="!showBtnLogin"
                     @click="SendMessage"
-                    class="responsive-btn"
                   >
-                    Send Message
+                    <span class="responsive-btn">Send Message</span>
                   </v-btn>
                 </v-col>
               </v-row>
@@ -103,7 +97,7 @@
                 class="flex-grow-1 h-100"
               >
                 <template #prepend="{ item }">
-                  <v-avatar size="40" class="ml-1 pa-1">
+                  <v-avatar :size="$vuetify.display.smAndDown ? 30 : 40" class="ml-1 pa-1">
                     <template v-if="item.photoUrl && item.photoUrl != 'data:image/jpeg;base64,'">
                       <img
                         :src="item.photoUrl"

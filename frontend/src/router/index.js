@@ -8,10 +8,24 @@
 import { createRouter, createWebHistory } from 'vue-router/auto'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
+import { useLoadingState } from '@/stores/loading'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: setupLayouts(routes),
+})
+
+// Start loading before navigation
+router.beforeEach((to, from, next) => {
+  const loading = useLoadingState()
+  loading.startLoading()
+  next()
+})
+
+// Stop loading after navigation finishes
+router.afterEach(() => {
+  const loading = useLoadingState()
+  loading.stopLoading()
 })
 
 // Workaround for https://github.com/vitejs/vite/issues/11804

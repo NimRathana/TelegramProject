@@ -240,7 +240,7 @@
                       <VAvatar class="cursor-pointer" color="primary" variant="tonal">
                           <VImg width="100" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
                           <VMenu activator="parent" width="230" location="bottom end" offset="14px">
-                              <VList density="compact" nav>
+                              <VList density="compact" nav :color="appStore.color">
                                   <VListItem>
                                       <template #prepend>
                                           <VListItemAction start>
@@ -256,7 +256,7 @@
                                       <VListItemSubtitle>@{{ user?.username }}</VListItemSubtitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
-                                  <VListItem link to="/Profile">
+                                  <VListItem link @click="goTo('/profile')">
                                       <template #prepend>
                                           <VIcon icon="mdi-account-tie" size="24" />
                                       </template>
@@ -273,6 +273,12 @@
                                           <VIcon icon="mdi-account-box" size="24" />
                                       </template>
                                       <VListItemTitle>Contacts</VListItemTitle>
+                                  </VListItem>
+                                  <VListItem link @click="goTo('/')">
+                                      <template #prepend>
+                                          <VIcon icon="mdi-home" size="24" />
+                                      </template>
+                                      <VListItemTitle>Home</VListItemTitle>
                                   </VListItem>
                                   <VDivider class="my-2" />
                                   <VListItem link variant="tonal" density="compact" active rounded class="mx-3 d-flex justify-center bg-red-accent-4" style="min-height: 30px;" @click="logout(user)">
@@ -299,6 +305,7 @@
                             VBtn: {
                               variant: appStore.skin == 'bordered' ? 'outlined' : 'tonal',
                               color: appStore.color,
+                              class: 'responsive-btn',
                             },
                             VCard: {
                               color: appStore.color,
@@ -309,7 +316,7 @@
                               color: appStore.color,
                               variant: appStore.skin == 'bordered' ? 'outlined' : 'solo',
                               clearable: true,
-                              density: 'compact'
+                              density: 'compact',
                             },
                             VSelect: {
                               color: appStore.color,
@@ -363,6 +370,9 @@
                               border: appStore.skin == 'bordered' ? true : false,
                               selectedClass: appStore.skin == 'bordered' ? 'active-tab-border-bg' : 'active-tab-bg',
                             },
+                            VList: {
+                              density: 'compact',
+                            },
                           }"
                         >
                           <v-container :fluid="appStore.content !== 'Compact'">
@@ -379,7 +389,7 @@
         </v-app>
     </v-responsive>
   </v-layout>
-  <v-btn style="position: fixed;bottom:70px;right:20px;z-index: 999;" icon="mdi-cog-outline" size="large"
+  <v-btn style="position: fixed;bottom:70px;right:20px;z-index: 999;" icon="mdi-cog-outline" :size="50"
       :color="appStore.color" @click.stop="toggleRightDrawer = !toggleRightDrawer" class="rotate-animation setting_btn"></v-btn>
 </template>
 
@@ -433,6 +443,9 @@ export default {
     }
   },
   methods: {
+    goTo(path) {
+      this.$router.push(path);
+    },
     ChangeTheme(newTheme) {
       this.appStore.setTheme(newTheme);
     },

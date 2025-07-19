@@ -24,19 +24,35 @@
       top: 0px !important;
     }
     .responsive-text {
-      font-size: clamp(14px, 2.5vw, 18px);
+      font-size: clamp(12px, 3vw, 16px);
       line-height: 1.4;
     }
     .responsive-subtext {
-      font-size: clamp(12px, 2vw, 16px);
+      font-size: clamp(10px, 2.5vw, 14px);
       color: rgba(0, 0, 0, 0.6);
     }
     .responsive-btn {
-      font-size: clamp(13px, 2vw, 16px);
-      padding: 0 16px;
-      min-height: 36px;
+      font-size: clamp(12px, 3vw, 14px);
+      padding: clamp(6px, 1.5vw, 7px) clamp(0px, 3vw, 10px);
       height: auto;
+      box-sizing: border-box;
       white-space: nowrap;
+    }
+    @media (max-width: 600px) {
+      .responsive-btn {
+        font-size: 12px;
+        padding: 0px 0px;
+      }
+    }
+
+    @media (min-width: 601px) {
+      .responsive-btn {
+        font-size: 14px;
+        padding: 0px 0px;
+      }
+    }
+    .v-list-item--density-compact:not(.v-list-item--nav).v-list-item--one-line {
+      padding-inline: 5px !important;
     }
   </style>
   <body>
