@@ -18,13 +18,13 @@
               <span class="text-h5">{{ tgUser.fullName }}</span>
               <!-- Desktop: 2nd line with phone + handle -->
               <div class="d-none d-md-flex flex-column text-subtitle-1 text-medium-emphasis">
-                <span>{{ tgUser.phone }}</span>
-                <span>{{ tgUser.username }}</span>
+                <span>{{ tgUser.phone ? tgUser.phone : '00000000' }}</span>
+                <span>{{ tgUser.username ? tgUser.username : 'username' }}</span>
               </div>
 
               <!-- Mobile: All in one line -->
               <span class="text-subtitle-1 text-medium-emphasis d-md-none">
-                +{{ tgUser.phone }} · @{{ tgUser.username }}
+                +{{ tgUser.phone ? tgUser.phone : '00000000' }} · @{{ tgUser.username? tgUser.username : 'username' }}
               </span>
             </v-col>
           </v-row>
