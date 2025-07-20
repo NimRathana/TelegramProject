@@ -63,7 +63,7 @@
         <!-- Posts Tab -->
         <v-window-item value="posts">
           <v-row v-if="posts.length" dense>
-            <v-col v-for="post in posts" :key="post.id" cols="12" sm="6" md="4" lg="3">
+            <v-col v-for="post in posts" :key="post.id" sm="6" md="4" lg="3">
               <v-card class="mb-4" elevation="2">
                 <v-card-text class="pa-0">
                   <v-img
@@ -125,14 +125,12 @@
         <!-- Photos Tab -->
         <v-window-item value="photos">
           <v-row>
-            <v-col
-              v-for="photo in photos"
-              :key="photo"
-              cols="6"
-              sm="4"
-              md="3"
-            >
-              <v-img :src="photo" height="160" cover />
+            <v-col v-for="photo in photos" :key="photo.id" cols="6" sm="4" md="3">
+              <v-img
+                :src="`data:${photo.mimeType};base64,${photo.base64}`"
+                height="160"
+                cover
+              />
             </v-col>
           </v-row>
         </v-window-item>
@@ -329,11 +327,7 @@ export default {
         { id: 1, name: 'Jane Smith', avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
         { id: 2, name: 'Michael Roe', avatar: 'https://randomuser.me/api/portraits/men/64.jpg' },
       ],
-      photos: [
-        'https://source.unsplash.com/random/300x300?sig=1',
-        'https://source.unsplash.com/random/300x300?sig=2',
-        'https://source.unsplash.com/random/300x300?sig=3',
-      ],
+      photos: [],
     };
   },
   created() {
@@ -342,7 +336,8 @@ export default {
   },
   mounted() {
     useHead({ title: 'Profile' })
-    this.fetchPosts();
+    // this.fetchPosts();
+    this.fetchPhotos();
   },
   methods: {
     async fetchPosts() {
@@ -356,6 +351,24 @@ export default {
         limit: 10,
       }).then(response => {
         this.posts = response.data.stories || [];
+        this.loadingState.stopLoading();
+      }).catch(err => {
+        this.showMessage = err.response?.data?.error || err.message;
+        this.dialogError = true;
+        this.loadingState.stopLoading();
+      });
+    },
+    async fetchPhotos() {
+      this.loadingState.startLoading();
+      if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
+        return;
+      }
+      await axios.post(process.env.APP_URL + '/api/GetPhotos', {
+        phone: this.tgUser.phone,
+        channelUsername: this.tgUser.username,
+        limit: 10,
+      }).then(response => {
+        this.photos = response.data.photos || [];
         this.loadingState.stopLoading();
       }).catch(err => {
         this.showMessage = err.response?.data?.error || err.message;

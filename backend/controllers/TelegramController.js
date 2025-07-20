@@ -657,6 +657,74 @@ class TelegramController {
             res.status(500).json({ error: err.errorMessage || err.message });
         }
     }
+
+    static async GetPhotos(req, res) {
+        const { phone } = req.body;
+
+        if (!phone) {
+            return res.status(400).json({ error: 'phone is required' });
+        }
+
+        try {
+            const sessionString = loadSession(phone.slice(3));
+            if (!sessionString) {
+                return res.status(400).json({ error: 'No saved session found for this phone' });
+            }
+
+            const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+                connectionRetries: 5,
+                autoReconnect: true,
+            });
+
+            await client.connect();
+
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phone.slice(3));
+                return res.status(401).json({ error: 'Session expired. Please log in again.' });
+            }
+
+            const me = await client.getMe();
+            const photosResult = await client.invoke(
+                new Api.photos.GetUserPhotos({
+                userId: me,
+                offset: 0,
+                maxId: 0,
+                limit: 10,
+                })
+            );
+
+            const photoBase64List = [];
+
+            for (const photo of photosResult.photos) {
+                try {
+                    const buffer = await client.downloadMedia(photo);
+                    const base64 = buffer.toString('base64');
+
+                    photoBase64List.push({
+                        id: photo.id,
+                        base64,
+                        mimeType: 'image/jpeg',
+                    });
+                } catch (err) {
+                    console.warn(`Failed to download photo ${photo.id}:`, err.message);
+                }
+            }
+
+            saveSession(phone.slice(3), client.session.save());
+
+            return res.status(200).json({ photos: photoBase64List });
+        } catch (err) {
+            if (err.errorMessage === 'FLOOD' && err.seconds) {
+                return res.status(429).json({
+                    error: "Too many attempts. Please wait before trying again.",
+                    waitSeconds: err.seconds,
+                    waitMinutes: Math.ceil(err.seconds / 60),
+                });
+            }
+            res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
 }
 
 module.exports = TelegramController;
