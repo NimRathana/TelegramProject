@@ -567,6 +567,69 @@ class TelegramController {
             res.status(500).json({ error: 'Failed to send messages.' });
         }
     }
+
+    static async GetPosts(req, res) {
+        const { phone, channelUsername, limit = 10 } = req.body;
+
+        if (!phone || !channelUsername) {
+            return res.status(400).json({ error: 'phone and channelUsername are required' });
+        }
+
+        try {
+            // Load session string (assuming phone without country code prefix slicing if needed)
+            const sessionString = loadSession(phone.slice(3)); // or just phone if you don't slice
+            if (!sessionString) {
+            return res.status(400).json({ error: 'No saved session found for this phone' });
+            }
+
+            const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+                connectionRetries: 5,
+                autoReconnect: true,
+            });
+
+            await client.connect();
+
+            // Check authorization status
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phone.slice(3));
+                return res.status(401).json({ error: 'Session expired. Please log in again.' });
+            }
+
+            // Get the channel entity by username or ID
+            const channel = await client.getEntity(channelUsername);
+
+            // Fetch last 'limit' messages from the channel/chat
+            const messages = await client.getMessages(channel, { limit: Number(limit) });
+
+            // Map to simpler JSON response
+            const posts = messages.map(msg => ({
+                id: msg.id,
+                senderId: msg.senderId?.value || null,
+                date: msg.date,
+                text: msg.message,
+                media: msg.media ? true : false,
+            }));
+
+            // Save the possibly updated session string
+            saveSession(phone.slice(3), client.session.save());
+
+            res.status(200).json(
+                JSON.parse(JSON.stringify({ posts }, (_, value) =>
+                    typeof value === 'bigint' ? value.toString() : value
+                ))
+            );
+        } catch (err) {
+            if (err.errorMessage === 'FLOOD' && err.seconds) {
+                return res.status(429).json({
+                    error: "Too many attempts. Please wait before trying again.",
+                    waitSeconds: err.seconds,
+                    waitMinutes: Math.ceil(err.seconds / 60),
+                });
+            }
+            res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
 }
 
 module.exports = TelegramController;

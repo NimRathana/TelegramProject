@@ -64,8 +64,11 @@
         <v-window-item value="posts">
           <v-card class="mb-4" v-for="post in posts" :key="post.id">
             <v-card-text>
-              <strong>{{ post.author }}</strong> - <small>{{ post.time }}</small>
-              <div class="mt-2">{{ post.content }}</div>
+              <strong>{{ post.senderId || 'Unknown Sender' }}</strong>
+              -
+              <small>{{ new Date(post.date).toLocaleString() }}</small>
+
+              <div class="mt-2">{{ post.text || '(No content)' }}</div>
             </v-card-text>
           </v-card>
         </v-window-item>
@@ -240,6 +243,29 @@
       </v-card>
     </template>
   </v-dialog>
+
+  <v-dialog
+      v-model="dialogError"
+      max-width="290"
+  >
+      <v-card>
+          <v-card-text class="text-center">
+              <v-icon color="red" size="70" class="mt-2 mb-2">mdi-alert-circle</v-icon>
+              <div class="text-subtitle-1">{{ showMessage }}</div>
+          </v-card-text>
+
+          <v-divider></v-divider>
+          <v-card-actions class="justify-end">
+              <v-btn
+                  color="red darken-1"
+                  text
+                  @click="dialogError = false, showMessage = ''"
+              >
+                  Close
+              </v-btn>
+          </v-card-actions>
+      </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -247,6 +273,7 @@ import { useHead } from '@vueuse/head'
 import { useAppStore } from '@/stores/app'
 import QRCode from 'qrcode';
 import { useUserStore } from '@/stores/userstore'
+import axios from 'axios'
 
 export default {
   props: {
@@ -259,18 +286,14 @@ export default {
       qrCode: null,
       qrDialog: false,
       editDialog: false,
+      dialogError: false,
+      showMessage: '',
       username: null,
       tgUser: null,
       appStore: useAppStore(),
       userStore: useUserStore(),
       tab: 'posts',
       posts: [
-        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
-        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
-        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
-        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
-        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
-        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
         { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
         { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
       ],
@@ -296,8 +319,29 @@ export default {
   },
   mounted() {
     useHead({ title: 'Profile' })
+    this.fetchPosts();
   },
   methods: {
+    async fetchPosts() {
+      if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
+        return;
+      }
+      await axios.post(process.env.APP_URL + '/api/GetPosts', {
+        phone: this.tgUser.phone,
+        channelUsername: this.tgUser.username,
+        limit: 10,
+      }).then(response => {
+        this.posts = rawPosts.map(post => ({
+          ...post,
+          author: post.senderId || 'Unknown',
+          time: new Date(post.date).toLocaleString(),
+          content: post.text || '(No content)',
+        }));
+      }).catch(err => {
+        this.showMessage = err.response?.data?.error || err.message;
+        this.dialogError = true;
+      });
+    },
     edit() {
       if (!this.tgUser || !this.tgUser.username) {
         return;

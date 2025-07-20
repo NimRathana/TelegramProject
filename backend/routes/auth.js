@@ -10,6 +10,7 @@ Router.post('/api/Logout', TelegramController.Logout);
 Router.post('/api/GetAllGroups', TelegramController.GetAllGroups);
 Router.post('/api/GetAllGroupMembers', TelegramController.GetAllGroupMembers);
 Router.post('/api/SendMessage', TelegramController.SendMessage);
+Router.post('/api/GetPosts', TelegramController.GetPosts);
 Router.get('/api/test', TelegramController.Test);
 
 module.exports = Router;
