@@ -213,7 +213,7 @@
             variant="solo-filled"
             hide-details
             clearable
-            class="fname"
+            class="ffield"
           ></v-text-field>
           <v-divider></v-divider>
           <v-text-field
@@ -221,7 +221,7 @@
             variant="solo-filled"
             hide-details
             clearable
-            class="lname"
+            class="lfield"
           ></v-text-field>
           <div class="text-truncate text-caption d-inline-block text-grey" style="max-width: 100%;">
             Enter your name and add an optional profile photo.
