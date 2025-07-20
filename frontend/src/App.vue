@@ -221,24 +221,34 @@
                       <v-menu offset-y>
                           <template #activator="{ props }">
                               <v-btn v-bind="props" icon>
-                                  <v-icon>
-                                    mdi-weather-sunny
-                                  </v-icon>
+                                  <v-icon>mdi-weather-sunny</v-icon>
                               </v-btn>
                           </template>
                           <v-list min-width="150">
                               <v-list-item @click="ChangeTheme('light')">
-                                  <v-list-item-title><v-icon>mdi-weather-sunny</v-icon>Light</v-list-item-title>
+                                  <template #prepend>
+                                    <VIcon icon="mdi-weather-sunny" size="24" />
+                                    <v-list-item-title class="ml-2">Light</v-list-item-title>
+                                  </template>
                               </v-list-item>
                               <v-list-item @click="ChangeTheme('dark')">
-                                  <v-list-item-title><v-icon>mdi-weather-night</v-icon>Dark</v-list-item-title>
+                                  <template #prepend>
+                                    <VIcon icon="mdi-weather-night" size="24" />
+                                    <v-list-item-title class="ml-2">Dark</v-list-item-title>
                               </v-list-item>
                           </v-list>
                       </v-menu>
                   </div>
                   <VBadge dot location="bottom right" offset-x="3" offset-y="3" class="mx-3" color="success" bordered>
-                      <VAvatar class="cursor-pointer" color="primary" variant="tonal">
-                          <VImg width="100" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
+                      <VAvatar class="cursor-pointer" variant="tonal">
+                          <template v-if="user?.profileImage">
+                            <VImg :src="user.profileImage" cover />
+                          </template>
+                          <template v-else>
+                            <span>
+                              {{ $helper.getInitials(user?.fullName) }}
+                            </span>
+                          </template>
                           <VMenu activator="parent" width="230" location="bottom end" offset="14px">
                               <VList density="compact" nav :color="appStore.color">
                                   <VListItem>
@@ -246,8 +256,15 @@
                                           <VListItemAction start>
                                               <VBadge dot location="bottom right" offset-x="3" offset-y="3"
                                                   color="success">
-                                                  <VAvatar color="primary" variant="tonal">
-                                                      <VImg cover :aspect-ratio="1" :src="user?.profileImage != null || undefined ? user.profileImage : $helper.getImageUrl('profile.png')" />
+                                                  <VAvatar variant="tonal">
+                                                      <template v-if="user?.profileImage">
+                                                        <VImg :src="user.profileImage" cover />
+                                                      </template>
+                                                      <template v-else>
+                                                        <span>
+                                                          {{ $helper.getInitials(user?.fullName) }}
+                                                        </span>
+                                                      </template>
                                                   </VAvatar>
                                               </VBadge>
                                           </VListItemAction>
@@ -373,6 +390,10 @@
                             VList: {
                               density: 'compact',
                             },
+                            VAvatar: {
+                              color: appStore.color,
+                              variant: appStore.skin == 'bordered' ? 'outlined' : 'tonal',
+                            },
                           }"
                         >
                           <v-container :fluid="appStore.content !== 'Compact'">
@@ -398,6 +419,7 @@ import { useAppStore } from '@/stores/app'
 import { useLoadingState } from '@/stores/loading'
 import { useUserStore } from '@/stores/userstore'
 import axios from 'axios'
+import { VAvatar } from 'vuetify/components'
 
 export default {
   data() {
@@ -442,6 +464,11 @@ export default {
       this.user = val;
     }
   },
+  mounted() {
+    if(this.userStore.user !== null || this.userStore.user !== undefined){
+      this.user = JSON.parse(this.userStore.user);
+    }
+  },
   methods: {
     goTo(path) {
       this.$router.push({ path: path });
@@ -481,6 +508,7 @@ export default {
       axios.post(process.env.APP_URL + '/api/Logout', { phone: (user.phone || '').toString().replace(/\s+/g, '') })
       .then((res) => {
         this.userStore.clear();
+        this.$router.push({ path: '/' });
       })
       .catch((err) => {
           if(err.response.data.error == "Session not found"){

@@ -97,7 +97,7 @@
                 class="flex-grow-1 h-100"
               >
                 <template #prepend="{ item }">
-                  <v-avatar :size="$vuetify.display.smAndDown ? 30 : 40" class="ml-1 pa-1">
+                  <v-avatar :size="$vuetify.display.smAndDown ? 30 : 40" class="ml-1" variant="plain">
                     <template v-if="item.photoUrl && item.photoUrl != 'data:image/jpeg;base64,'">
                       <img
                         :src="item.photoUrl"

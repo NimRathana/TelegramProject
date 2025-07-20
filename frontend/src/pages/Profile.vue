@@ -9,7 +9,14 @@
             <!-- Profile Picture -->
             <v-col cols="12" md="3" class="d-flex justify-center">
               <v-avatar :size="$vuetify.display.smAndDown ? 100 : 140">
-                <v-img src="https://randomuser.me/api/portraits/men/85.jpg" />
+                <template v-if="tgUser.profileImage">
+                  <VImg :src="tgUser.profileImage" />
+                </template>
+                <template v-else>
+                  <span class="text-h5 font-weight-bold" style="letter-spacing: 5px !important;">
+                    {{ $helper.getInitials(tgUser.fullName) }}
+                  </span>
+                </template>
               </v-avatar>
             </v-col>
 
@@ -40,6 +47,7 @@
         v-model="tab"
         :style="{ '--active-tab-bg': appStore.skin !== 'bordered' ? appStore.color : '' }"
         class="responsive-btn"
+        grow
       >
         <v-tab value="posts"><span class="responsive-btn">Posts</span></v-tab>
         <v-tab value="about"><span class="responsive-btn">About</span></v-tab>
@@ -152,6 +160,7 @@
 import { useHead } from '@vueuse/head'
 import { useAppStore } from '@/stores/app'
 import QRCode from 'qrcode';
+import { useUserStore } from '@/stores/userstore'
 
 export default {
   props: {
@@ -166,8 +175,15 @@ export default {
       username: null,
       tgUser: null,
       appStore: useAppStore(),
+      userStore: useUserStore(),
       tab: 'posts',
       posts: [
+        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
+        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
+        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
+        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
+        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
+        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
         { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
         { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
       ],
@@ -208,7 +224,7 @@ export default {
       } catch (error) {
         console.error('QR generation failed:', error);
       }
-    }
+    },
   }
 };
 </script>
