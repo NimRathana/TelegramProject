@@ -235,6 +235,7 @@
                                   <template #prepend>
                                     <VIcon icon="mdi-weather-night" size="24" />
                                     <v-list-item-title class="ml-2">Dark</v-list-item-title>
+                                  </template>
                               </v-list-item>
                           </v-list>
                       </v-menu>
