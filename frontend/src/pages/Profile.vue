@@ -236,7 +236,11 @@
             hide-details
             clearable
             class="ffield"
-          ></v-text-field>
+          >
+            <template v-slot:default>
+              <span>+</span>
+            </template>
+          </v-text-field>
           <v-divider></v-divider>
           <v-text-field
             v-model="tgUser.username"
