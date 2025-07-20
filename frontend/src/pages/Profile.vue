@@ -3,7 +3,7 @@
     <v-col cols="12">
       <v-card elevation="1">
         <v-card-text style="position: relative;">
-          <v-icon style="position: absolute; top: 16px; right: 16px;" @click="editDialog = true">mdi-pencil</v-icon>
+          <v-icon style="position: absolute; top: 16px; right: 16px;" @click="edit">mdi-pencil</v-icon>
           <v-icon style="position: absolute; top: 16px; left: 16px;" @click="generateQrCode">mdi-qrcode</v-icon>
           <v-row no-gutters>
             <!-- Profile Picture -->
@@ -298,6 +298,12 @@ export default {
     useHead({ title: 'Profile' })
   },
   methods: {
+    edit() {
+      if (!this.tgUser || !this.tgUser.username) {
+        return;
+      }
+      this.editDialog = true;
+    },
     async generateQrCode() {
       if (!this.tgUser || !this.tgUser.username) {
         return;
