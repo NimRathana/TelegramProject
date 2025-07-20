@@ -343,7 +343,7 @@ export default {
   },
   mounted() {
     useHead({ title: 'Profile' })
-    // this.fetchPosts();
+    this.fetchPosts();
     this.fetchPhotos();
   },
   methods: {
