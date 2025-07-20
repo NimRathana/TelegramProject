@@ -3,7 +3,7 @@
     <v-col cols="12">
       <v-card elevation="1">
         <v-card-text style="position: relative;">
-          <v-icon style="position: absolute; top: 16px; right: 16px;">mdi-pencil</v-icon>
+          <v-icon style="position: absolute; top: 16px; right: 16px;" @click="editDialog = true">mdi-pencil</v-icon>
           <v-icon style="position: absolute; top: 16px; left: 16px;" @click="generateQrCode">mdi-qrcode</v-icon>
           <v-row no-gutters>
             <!-- Profile Picture -->
@@ -153,6 +153,93 @@
       </v-card>
     </template>
   </v-dialog>
+
+  <v-dialog v-model="editDialog" max-width="500" persistent>
+    <template v-slot:default="{ isActive }">
+      <v-card rounded="lg">
+        <div class="d-flex justify-space-between align-center mt-2">
+          <v-btn
+            color="primary"
+            variant="plain"
+            @click="isActive.value = false"
+          ><span>Cancel</span></v-btn>
+
+          <v-btn
+            color="primary"
+            variant="plain"
+          ><span>Done</span></v-btn>
+        </div>
+
+        <v-card-text class="d-flex flex-column align-center pa-0">
+          <v-avatar :size="$vuetify.display.smAndDown ? 80 : 100">
+            <template v-if="tgUser.profileImage">
+              <VImg :src="tgUser.profileImage" />
+            </template>
+            <template v-else>
+              <span class="text-h5 font-weight-bold" style="letter-spacing: 5px !important;">
+                {{ $helper.getInitials(tgUser.fullName) }}
+              </span>
+            </template>
+          </v-avatar>
+          <span class="mt-1 text-blue">Set New Photo</span>
+        </v-card-text>
+
+        <v-card-text>
+          <v-text-field
+            v-model="tgUser.firstName"
+            variant="solo-filled"
+            hide-details
+            clearable
+            class="fname"
+          ></v-text-field>
+          <v-divider></v-divider>
+          <v-text-field
+            v-model="tgUser.lastName"
+            variant="solo-filled"
+            hide-details
+            clearable
+            class="lname"
+          ></v-text-field>
+          <div class="text-truncate text-caption d-inline-block text-grey" style="max-width: 100%;">
+            Enter your name and add an optional profile photo.
+          </div>
+        </v-card-text>
+
+        <v-card-text class="pt-0">
+          <v-text-field
+            v-model="tgUser.phone"
+            label="Phone Number"
+            variant="solo-filled"
+            hide-details
+            clearable
+            class="ffield"
+          ></v-text-field>
+          <v-divider></v-divider>
+          <v-text-field
+            v-model="tgUser.username"
+            label="Username"
+            variant="solo-filled"
+            hide-details
+            clearable
+            class="cfield"
+          >
+            <template v-slot:default>
+              <span>@</span>
+            </template>
+          </v-text-field>
+          <v-text-field
+            v-model="tgUser.dateOfBirth"
+            label="Date of Birth"
+            type="date"
+            variant="solo-filled"
+            hide-details
+            clearable
+            class="lfield"
+          ></v-text-field>
+        </v-card-text>
+      </v-card>
+    </template>
+  </v-dialog>
 </template>
 
 <script>
@@ -171,6 +258,7 @@ export default {
     return {
       qrCode: null,
       qrDialog: false,
+      editDialog: false,
       username: null,
       tgUser: null,
       appStore: useAppStore(),
@@ -227,3 +315,14 @@ export default {
   }
 };
 </script>
+<style>
+.ffield .v-field {
+  border-radius: 10px 10px 0px 0px !important;
+}
+.lfield .v-field {
+  border-radius: 0px 0px 10px 10px !important;
+}
+.cfield .v-field {
+  border-radius: 0px !important;
+}
+</style>
