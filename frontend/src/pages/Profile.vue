@@ -62,15 +62,35 @@
       <v-window v-model="tab">
         <!-- Posts Tab -->
         <v-window-item value="posts">
-          <v-card class="mb-4" v-for="post in posts" :key="post.id">
-            <v-card-text>
-              <strong>{{ post.senderId || 'Unknown Sender' }}</strong>
-              -
-              <small>{{ new Date(post.date).toLocaleString() }}</small>
-
-              <div class="mt-2">{{ post.text || '(No content)' }}</div>
-            </v-card-text>
-          </v-card>
+          <v-row v-if="posts.length" dense>
+            <v-col v-for="post in posts" :key="post.id" cols="12" sm="6" md="4" lg="3">
+              <v-card class="mb-4" elevation="2">
+                <v-card-text class="pa-0">
+                  <v-img
+                    v-if="post.mediaType === 'image'"
+                    :src="`data:${post.mimeType};base64,${post.mediaBase64}`"
+                    height="250"
+                    cover
+                  />
+                  <video
+                    v-else-if="post.mediaType === 'video'"
+                    controls
+                    style="width: 100%; height: 250px; object-fit: cover;"
+                  >
+                    <source :src="`data:${post.mimeType};base64,${post.mediaBase64}`" :type="post.mimeType" />
+                    Your browser does not support the video tag.
+                  </video>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+          <!-- Empty state -->
+          <v-row v-else justify="center">
+            <v-col cols="12" class="text-center">
+              <v-icon size="64" color="grey lighten-1">mdi-emoticon-sad</v-icon>
+              <p class="mt-2">No posts available.</p>
+            </v-col>
+          </v-row>
         </v-window-item>
 
         <!-- About Tab -->
@@ -273,6 +293,7 @@ import { useHead } from '@vueuse/head'
 import { useAppStore } from '@/stores/app'
 import QRCode from 'qrcode';
 import { useUserStore } from '@/stores/userstore'
+import { useLoadingState } from '@/stores/loading'
 import axios from 'axios'
 
 export default {
@@ -292,11 +313,9 @@ export default {
       tgUser: null,
       appStore: useAppStore(),
       userStore: useUserStore(),
+      loadingState: useLoadingState(),
       tab: 'posts',
-      posts: [
-        { id: 1, author: 'John Doe', time: '2h ago', content: 'Hello friends! 👋' },
-        { id: 2, author: 'John Doe', time: 'Yesterday', content: 'Loving the new project!' },
-      ],
+      posts: [],
       about: {
         bio: 'Engineer, traveler, and lifelong learner.',
         email: 'john.doe@example.com',
@@ -323,6 +342,7 @@ export default {
   },
   methods: {
     async fetchPosts() {
+      this.loadingState.startLoading();
       if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
         return;
       }
@@ -331,15 +351,12 @@ export default {
         channelUsername: this.tgUser.username,
         limit: 10,
       }).then(response => {
-        this.posts = rawPosts.map(post => ({
-          ...post,
-          author: post.senderId || 'Unknown',
-          time: new Date(post.date).toLocaleString(),
-          content: post.text || '(No content)',
-        }));
+        this.posts = response.data.stories || [];
+        this.loadingState.stopLoading();
       }).catch(err => {
         this.showMessage = err.response?.data?.error || err.message;
         this.dialogError = true;
+        this.loadingState.stopLoading();
       });
     },
     edit() {

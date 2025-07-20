@@ -576,10 +576,9 @@ class TelegramController {
         }
 
         try {
-            // Load session string (assuming phone without country code prefix slicing if needed)
-            const sessionString = loadSession(phone.slice(3)); // or just phone if you don't slice
+            const sessionString = loadSession(phone.slice(3));
             if (!sessionString) {
-            return res.status(400).json({ error: 'No saved session found for this phone' });
+                return res.status(400).json({ error: 'No saved session found for this phone' });
             }
 
             const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
@@ -589,36 +588,64 @@ class TelegramController {
 
             await client.connect();
 
-            // Check authorization status
             const isAuthorized = await client.checkAuthorization();
             if (!isAuthorized) {
                 deleteSession(phone.slice(3));
                 return res.status(401).json({ error: 'Session expired. Please log in again.' });
             }
 
-            // Get the channel entity by username or ID
-            const channel = await client.getEntity(channelUsername);
+            const me = await client.getMe();
+            const selfPeer = await client.getEntity(me);
 
-            // Fetch last 'limit' messages from the channel/chat
-            const messages = await client.getMessages(channel, { limit: Number(limit) });
+            const peerStories = await client.invoke(new Api.stories.GetPeerStories({ peer: selfPeer }));
+            if (!peerStories || !peerStories.stories || peerStories.stories.length === 0) {
+                return res.status(404).json({ error: 'No stories found for this user.' });
+            }
+            
+            const storyMedia = [];
 
-            // Map to simpler JSON response
-            const posts = messages.map(msg => ({
-                id: msg.id,
-                senderId: msg.senderId?.value || null,
-                date: msg.date,
-                text: msg.message,
-                media: msg.media ? true : false,
-            }));
+            for (const storyItem of peerStories.stories.stories) {
+                try {
+                    let mediaType = 'unknown';
+                    let mimeType = 'application/octet-stream';
 
-            // Save the possibly updated session string
+                    const media = storyItem.media;
+
+                    if (media instanceof Api.MessageMediaPhoto) {
+                        mediaType = 'image';
+                        mimeType = 'image/jpeg'; // Telegram doesn't provide exact type, but it's usually JPEG
+                    } else if (media instanceof Api.MessageMediaDocument) {
+                        const doc = media.document;
+                        mimeType = doc.mimeType;
+
+                        if (mimeType.startsWith('video/')) {
+                            mediaType = 'video';
+                        } else if (mimeType.startsWith('image/')) {
+                            mediaType = 'image';
+                        } else if (mimeType.startsWith('audio/')) {
+                            mediaType = 'audio';
+                        } else {
+                            mediaType = 'file';
+                        }
+                    }
+
+                    const buffer = await client.downloadMedia(media);
+                    const base64Data = buffer.toString('base64');
+
+                    storyMedia.push({
+                        id: storyItem.id,
+                        mediaType,
+                        mimeType,
+                        mediaBase64: base64Data,
+                    });
+                } catch (err) {
+                    throw new Error(err);
+                }
+            }
+
             saveSession(phone.slice(3), client.session.save());
 
-            res.status(200).json(
-                JSON.parse(JSON.stringify({ posts }, (_, value) =>
-                    typeof value === 'bigint' ? value.toString() : value
-                ))
-            );
+            return res.status(200).json({ stories: storyMedia });
         } catch (err) {
             if (err.errorMessage === 'FLOOD' && err.seconds) {
                 return res.status(429).json({
