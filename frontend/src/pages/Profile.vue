@@ -324,6 +324,7 @@ export default {
       userStore: useUserStore(),
       loadingState: useLoadingState(),
       tab: 'posts',
+      initialized: false,
       posts: [],
       about: {
         bio: 'Engineer, traveler, and lifelong learner.',
@@ -340,11 +341,24 @@ export default {
   created() {
     this.tgUser = JSON.parse(localStorage.getItem('tg_user')) || {};
     this.username = this.tgUser.username || '';
+    this.initialized = true;
   },
   watch: {
+    'initialized': {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && this.tgUser) {
+          if (this.tab === 'posts' && this.posts.length === 0) {
+            this.fetchPosts();
+          }
+        }
+      }
+    },
     tab: {
       immediate: true,
       handler(newTab) {
+        if (!this.initialized) return;
+
         if (newTab === 'posts' && this.posts.length === 0) {
           this.fetchPosts();
         } else if (newTab === 'photos' && this.photos.length === 0) {
