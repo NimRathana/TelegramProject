@@ -124,13 +124,20 @@
 
         <!-- Photos Tab -->
         <v-window-item value="photos">
-          <v-row>
+          <v-row v-if="photos.length" dense>
             <v-col v-for="photo in photos" :key="photo.id" cols="6" sm="4" md="3">
               <v-img
                 :src="`data:${photo.mimeType};base64,${photo.base64}`"
                 height="160"
                 cover
               />
+            </v-col>
+          </v-row>
+          <!-- Empty state -->
+          <v-row v-else justify="center">
+            <v-col cols="12" class="text-center">
+              <v-icon size="64" color="grey lighten-1">mdi-emoticon-sad</v-icon>
+              <p class="mt-2">No photos available.</p>
             </v-col>
           </v-row>
         </v-window-item>
