@@ -194,7 +194,7 @@
         </div>
 
         <v-card-text class="d-flex flex-column align-center pa-0">
-          <v-avatar :size="$vuetify.display.smAndDown ? 80 : 100">
+          <v-avatar :color="appStore.color" :size="$vuetify.display.smAndDown ? 80 : 100">
             <template v-if="tgUser.profileImage">
               <VImg :src="tgUser.profileImage" />
             </template>
