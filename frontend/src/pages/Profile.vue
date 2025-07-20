@@ -47,7 +47,6 @@
         v-model="tab"
         :style="{ '--active-tab-bg': appStore.skin !== 'bordered' ? appStore.color : '' }"
         class="responsive-btn"
-        grow
       >
         <v-tab value="posts"><span class="responsive-btn">Posts</span></v-tab>
         <v-tab value="about"><span class="responsive-btn">About</span></v-tab>
