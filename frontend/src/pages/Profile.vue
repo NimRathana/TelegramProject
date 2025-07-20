@@ -327,8 +327,8 @@ export default {
       posts: [],
       about: {
         bio: 'Engineer, traveler, and lifelong learner.',
-        email: 'john.doe@example.com',
-        location: 'San Francisco, CA',
+        email: 'nimrathana@example.com',
+        location: 'Phnom Penh, Cambodia',
       },
       friends: [
         { id: 1, name: 'Jane Smith', avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
@@ -341,10 +341,20 @@ export default {
     this.tgUser = JSON.parse(localStorage.getItem('tg_user')) || {};
     this.username = this.tgUser.username || '';
   },
+  watch: {
+    tab: {
+      immediate: true,
+      handler(newTab) {
+        if (newTab === 'posts' && this.posts.length === 0) {
+          this.fetchPosts();
+        } else if (newTab === 'photos' && this.photos.length === 0) {
+          this.fetchPhotos();
+        }
+      }
+    }
+  },
   mounted() {
     useHead({ title: 'Profile' })
-    this.fetchPosts();
-    this.fetchPhotos();
   },
   methods: {
     async fetchPosts() {
