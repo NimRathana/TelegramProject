@@ -372,10 +372,11 @@ export default {
   },
   methods: {
     async fetchPosts() {
-      this.loadingState.startLoading();
       if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
         return;
       }
+
+      this.loadingState.startLoading();
       await axios.post(process.env.APP_URL + '/api/GetPosts', {
         phone: this.tgUser.phone,
         channelUsername: this.tgUser.username,
