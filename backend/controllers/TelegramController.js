@@ -921,7 +921,7 @@ class TelegramController {
                 username: entity.username ?? null,
                 phone: entity.phone ?? null,
                 bio: full.fullUser.about ?? null,
-                date: full.fullUser.birthday.day ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
+                date: (full.fullUser.birthday && full.fullUser.birthday.day != null && full.fullUser.birthday.month != null && full.fullUser.birthday.year != null) ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
             }];
 
             saveSession(phone.slice(3), client.session.save());
