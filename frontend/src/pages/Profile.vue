@@ -294,7 +294,7 @@
             </template>
           </v-text-field>
           <v-text-field
-            v-model="tgUser.dateOfBirth"
+            :value="tgUser.date"
             label="Date of Birth"
             type="date"
             variant="solo-filled"
@@ -370,6 +370,7 @@ export default {
   created() {
     this.tgUser = JSON.parse(localStorage.getItem('tg_user')) || {};
     this.username = this.tgUser.username || '';
+    this.tgUser.date = this.formatDate(this.tgUser.date);
     this.initialized = true;
   },
   watch: {
@@ -520,6 +521,12 @@ export default {
         console.error('QR generation failed:', error);
       }
     },
+    formatDate(isoDate) {
+      if (!isoDate) return '';
+      const [day, month, year] = isoDate.split('-');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
   }
 };
 </script>

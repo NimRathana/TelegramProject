@@ -130,6 +130,14 @@ class TelegramController {
             const sessionString = client.session.save();
             saveSession(phone, sessionString);
             const me = await client.getMe();
+
+            const entity = await client.getEntity(me.username);
+
+            if (entity.className !== "User") {
+                return res.status(400).json({ error: "Provided username does not refer to a user." });
+            }
+
+            const full = await client.invoke(new Api.users.GetFullUser({ id: entity }));
             let profileImage = null;
             let user = null;
             if (me) {
@@ -144,7 +152,10 @@ class TelegramController {
                     firstName: me.firstName,
                     lastName: me.lastName,
                     fullName: `${me.firstName || ''} ${me.lastName || ''}`.trim(),
-                    profileImage, // ✅ base64 image string
+                    profileImage,
+                    about: full.fullUser.about ?? null,
+                    date: (full.fullUser.birthday && full.fullUser.birthday.day != null && full.fullUser.birthday.month != null && full.fullUser.birthday.year != null) ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
+
                 };
             }
             res.json({ message: "Logged in", session: sessionString, user: user });
@@ -190,6 +201,14 @@ class TelegramController {
             const sessionString = client.session.save();
             saveSession(phone, sessionString);
             const me = await client.getMe();
+
+            const entity = await client.getEntity(me.username);
+
+            if (entity.className !== "User") {
+                return res.status(400).json({ error: "Provided username does not refer to a user." });
+            }
+
+            const full = await client.invoke(new Api.users.GetFullUser({ id: entity }));
             let profileImage = null;
             let user = null;
             if (me) {
@@ -204,7 +223,9 @@ class TelegramController {
                     firstName: me.firstName,
                     lastName: me.lastName,
                     fullName: `${me.firstName || ''} ${me.lastName || ''}`.trim(),
-                    profileImage, // ✅ base64 image string
+                    profileImage, 
+                    about: full.fullUser.about ?? null,
+                    date: (full.fullUser.birthday && full.fullUser.birthday.day != null && full.fullUser.birthday.month != null && full.fullUser.birthday.year != null) ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
                 };
             }
             return res.json({ message: "Logged in with 2FA", session: sessionString, user: user });
@@ -290,6 +311,14 @@ class TelegramController {
 
             const me = await client.getMe();
 
+            const entity = await client.getEntity(me.username);
+
+            if (entity.className !== "User") {
+                return res.status(400).json({ error: "Provided username does not refer to a user." });
+            }
+
+            const full = await client.invoke(new Api.users.GetFullUser({ id: entity }));
+
             let profileImage = null;
             if (me.photo) {
                 const photoBuffer = await client.downloadProfilePhoto(me);
@@ -306,6 +335,8 @@ class TelegramController {
                     lastName: me.lastName,
                     fullName: `${me.firstName || ''} ${me.lastName || ''}`.trim(),
                     profileImage,
+                    about: full.fullUser.about ?? null,
+                    date: (full.fullUser.birthday && full.fullUser.birthday.day != null && full.fullUser.birthday.month != null && full.fullUser.birthday.year != null) ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
                 }
             });
 
