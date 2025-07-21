@@ -725,6 +725,130 @@ class TelegramController {
             res.status(500).json({ error: err.errorMessage || err.message });
         }
     }
+
+    static async GetArchivedChats(req, res) {
+        const { phone } = req.body;
+
+        if (!phone) {
+            return res.status(400).json({ error: 'phone is required' });
+        }
+
+        try {
+            const sessionString = loadSession(phone.slice(3));
+            if (!sessionString) {
+                return res.status(400).json({ error: 'No saved session found for this phone' });
+            }
+
+            const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+                connectionRetries: 5,
+                autoReconnect: true,
+            });
+
+            await client.connect();
+
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phone.slice(3));
+                return res.status(401).json({ error: 'Session expired. Please log in again.' });
+            }
+
+            const dialogs = await client.getDialogs({ folderId: 1 });
+            const archivedChats = dialogs.filter(dialog => dialog.dialog.folderId === 1);
+
+            const result = [];
+
+            for (const chat of archivedChats) {
+                let imageBase64 = null;
+
+                try {
+                    const buffer = await client.downloadProfilePhoto(chat);
+                    if (buffer) {
+                        imageBase64 = buffer.toString('base64');
+                    }
+                } catch (err) {
+                    console.warn(`No image for chat ${chat.id}:`, err.message);
+                }
+
+                result.push({
+                    id: chat.id,
+                    name: chat.title || (chat.user && `${chat.user.firstName} ${chat.user.lastName || ''}`),
+                    type: chat.className,
+                    hasImage: !!imageBase64,
+                    image: imageBase64 ? `data:image/jpeg;base64,${imageBase64}` : null,
+                    phone: chat.entity.phone ? chat.entity.phone : '',
+                    username: chat.entity.username ? chat.entity.username : '',
+                });
+            }
+
+            saveSession(phone.slice(3), client.session.save());
+
+            return res.status(200).json({ archivedChats: result });
+        } catch (err) {
+            res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
+
+    static async GetContacts(req, res) {
+        const { phone } = req.body;
+
+        if (!phone) {
+            return res.status(400).json({ error: 'phone is required' });
+        }
+
+        try {
+            const sessionString = loadSession(phone.slice(3));
+            if (!sessionString) {
+                return res.status(400).json({ error: 'No saved session found for this phone' });
+            }
+
+            const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+                connectionRetries: 5,
+                autoReconnect: true,
+            });
+
+            await client.connect();
+
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phone.slice(3));
+                return res.status(401).json({ error: 'Session expired. Please log in again.' });
+            }
+
+            const result = await client.invoke(new Api.contacts.GetContacts({ hash: 0 }));
+            const contacts = [];
+
+            for (const user of result.users) {
+                if (!user.firstName && !user.lastName) continue; // skip empty entries
+
+                let imageBase64 = null;
+
+                try {
+                    const buffer = await client.downloadProfilePhoto(user);
+                    if (buffer) {
+                        imageBase64 = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+                    }
+                } catch (err) {
+                    // No profile photo or can't fetch — this is normal
+                    console.warn(`No profile photo for ${user.id}: ${err.message}`);
+                }
+
+                contacts.push({
+                    id: user.id,
+                    name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+                    username: user.username ?? '',
+                    phone: user.phone ?? '',
+                    hasImage: !!imageBase64,
+                    image: imageBase64,
+                });
+            }
+
+            saveSession(phone.slice(3), client.session.save());
+
+            return res.status(200).json({ contacts });
+        } catch (err) {
+            res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
 }
 
 module.exports = TelegramController;

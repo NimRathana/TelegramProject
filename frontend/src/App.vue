@@ -280,13 +280,13 @@
                                       </template>
                                       <VListItemTitle>My Profile</VListItemTitle>
                                   </VListItem>
-                                  <VListItem link>
+                                  <VListItem link @click="openDialog('archivedChats')">
                                       <template #prepend>
-                                          <VIcon icon="mdi-cog" size="24" />
+                                          <VIcon icon="mdi-archive" size="24" />
                                       </template>
-                                      <VListItemTitle>Setting</VListItemTitle>
+                                      <VListItemTitle>Archived Chats</VListItemTitle>
                                   </VListItem>
-                                  <VListItem link>
+                                  <VListItem link @click="openDialog('contacts')">
                                       <template #prepend>
                                           <VIcon icon="mdi-account-box" size="24" />
                                       </template>
@@ -411,8 +411,62 @@
         </v-app>
     </v-responsive>
   </v-layout>
-  <v-btn style="position: fixed;bottom:70px;right:20px;z-index: 999;" icon="mdi-cog-outline" :size="50"
-      :color="appStore.color" @click.stop="toggleRightDrawer = !toggleRightDrawer" class="rotate-animation setting_btn"></v-btn>
+  <v-btn style="position: fixed;bottom:70px;right:20px;z-index: 999;" icon="mdi-cog-outline" :size="50" :color="appStore.color" @click.stop="toggleRightDrawer = !toggleRightDrawer" class="rotate-animation setting_btn"></v-btn>
+
+  <v-dialog v-model="Dialog" max-width="500" persistent :fullscreen="isFullscreen" scrollable>
+    <template v-slot:default="{ isActive }">
+      <v-card
+        :prepend-icon="dialogType === 'contacts' ? 'mdi-account-box' : 'mdi-archive'"
+        :title="dialogType === 'contacts' ? 'Contacts' : 'Archived Chats'"
+      >
+        <v-divider></v-divider>
+
+        <v-card-text class="pt-0 pb-0" style="max-height: 500px;">
+          <div v-if="(dialogType === 'archivedChats' && archivedData.length === 0) || (dialogType === 'contacts' && contacts.length === 0)"
+            class="text-center grey--text"
+          >
+            No {{ dialogType }} found.
+          </div>
+
+          <v-list v-else>
+            <v-list-item
+              v-for="item in dialogType === 'archivedChats' ? archivedData : contacts"
+              :key="item.id"
+            >
+              <template #prepend>
+                <VAvatar
+                  :color="appStore.color"
+                  class="mr-2"
+                >
+                  <template v-if="item?.hasImage && item?.image != 'data:image/jpeg;base64,'">
+                    <VImg :src="item.image" cover />
+                  </template>
+                  <template v-else>
+                    <span>{{ $helper.getInitials(item?.name) }}</span>
+                  </template>
+                </VAvatar>
+                <div>
+                  <v-list-item-title>
+                    {{ item.name || 'Unknown' }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ item.phone ? '+' + item.phone : (item.username ? '@' + item.username : 'Unknown') }}
+                  </v-list-item-subtitle>
+                </div>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="red" text="Close" variant="tonal" @click="isActive.value = false"></v-btn>
+        </v-card-actions>
+      </v-card>
+    </template>
+  </v-dialog>
 </template>
 
 <script>
@@ -439,7 +493,12 @@ export default {
       selectedContent: useAppStore().content || 'Compact',
       selectedDirection: useAppStore().direction || 'Left',
       overlay: true,
-      user: []
+      user: [],
+      archivedData: [],
+      contacts: [],
+      Dialog: false,
+      isFullscreen: false,
+      dialogType: '',
     }
   },
   watch: {
@@ -465,12 +524,63 @@ export default {
       this.user = val;
     }
   },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkWidth)
+  },
   mounted() {
     if(this.userStore.user !== null || this.userStore.user !== undefined){
       this.user = JSON.parse(this.userStore.user);
     }
+
+    window.addEventListener('resize', this.checkWidth)
   },
   methods: {
+    checkWidth() {
+      this.isFullscreen = window.innerWidth < 450
+    },
+    openDialog(type) {
+      if (!this.user || !this.user.phone) {
+        this.errorMessage = "User phone number is not available.";
+        this.dialogError = true;
+        return;
+      }
+
+      const phone = (this.user.phone || '').toString().replace(/\s+/g, '');
+
+      if (type === 'archivedChats' && this.archivedData.length > 0) {
+        this.dialogType = 'archivedChats';
+        this.Dialog = true;
+        return;
+      }
+      if (type === 'contacts' && this.contacts.length > 0) {
+        this.dialogType = 'contacts';
+        this.Dialog = true;
+        return;
+      }
+
+      const endpoint = type === 'contacts' ? '/api/GetContacts' : '/api/GetArchivedChats';
+
+      this.loadingState.startLoading();
+      axios.post(process.env.APP_URL + endpoint, { phone })
+        .then((res) => {
+          if (type === 'contacts') {
+            this.contacts = res.data.contacts;
+          } else {
+            this.archivedData = res.data.archivedChats;
+          }
+          this.dialogType = type;
+          this.Dialog = true;
+          this.loadingState.stopLoading();
+        })
+        .catch((err) => {
+          const error = err.response?.data?.error || "Unknown error occurred.";
+          if (error.includes("Session")) {
+            this.errorMessage = "Session not found.";
+            this.dialogError = true;
+          }
+          this.loadingState.stopLoading();
+        });
+    },
     goTo(path) {
       this.$router.push({ path: path });
     },
