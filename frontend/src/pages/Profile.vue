@@ -50,7 +50,7 @@
       >
         <v-tab value="posts"><span class="responsive-btn">Posts</span></v-tab>
         <v-tab value="about"><span class="responsive-btn">About</span></v-tab>
-        <v-tab value="friends"><span class="responsive-btn">Friends</span></v-tab>
+        <v-tab value="contacts"><span class="responsive-btn">Contacts</span></v-tab>
         <v-tab value="photos"><span class="responsive-btn">Photos</span></v-tab>
       </v-tabs>
     </v-col>
@@ -95,29 +95,63 @@
 
         <!-- About Tab -->
         <v-window-item value="about">
-          <v-card>
+          <v-card v-if="about.length">
             <v-card-text>
-              <p><strong>Bio:</strong> {{ about.bio }}</p>
-              <p><strong>Email:</strong> {{ about.email }}</p>
-              <p><strong>Location:</strong> {{ about.location }}</p>
+              <p v-if="about.bio"><strong>Bio:</strong> {{ about.bio }}</p>
+              <p v-if="about.phone"><strong>Phone:</strong> +{{ about.phone }}</p>
+              <p v-if="about.username"><strong>Username:</strong> @{{ about.username }}</p>
+              <p v-if="about.date"><strong>Date:</strong> {{ about.date }}</p>
             </v-card-text>
           </v-card>
+          <!-- Empty state -->
+          <v-row v-else justify="center">
+            <v-col cols="12" class="text-center">
+              <v-icon size="64" color="grey lighten-1">mdi-emoticon-sad</v-icon>
+              <p class="mt-2">No about information available.</p>
+            </v-col>
+          </v-row>
         </v-window-item>
 
         <!-- Friends Tab -->
-        <v-window-item value="friends">
-          <v-row>
+        <v-window-item value="contacts">
+          <v-row v-if="contacts.length" dense>
             <v-col
-              v-for="friend in friends"
-              :key="friend.id"
+              v-for="contact in contacts"
+              :key="contact.id"
               cols="6"
               sm="4"
               md="3"
             >
               <v-card>
-                <v-img :src="friend.avatar" height="120" cover />
-                <v-card-text class="text-center">{{ friend.name }}</v-card-text>
+                <v-img
+                  v-if="contact.hasImage && contact.image && contact.image !== 'data:image/jpeg;base64,'"
+                  :src="contact.image"
+                  height="120"
+                  cover
+                />
+                <v-avatar
+                  v-else
+                  class="ma-4 mx-auto d-flex align-center justify-center"
+                  size="80"
+                  :color="appStore.color"
+                >
+                  <span>{{ $helper.getInitials(contact.name) }}</span>
+                </v-avatar>
+
+                <v-card-text class="text-center">
+                  <div class="font-weight-medium">{{ contact.name }}</div>
+                  <div class="text-caption grey--text">
+                    {{ contact.phone ? '+' + contact.phone : (contact.username ? '@' + contact.username : 'No info') }}
+                  </div>
+                </v-card-text>
               </v-card>
+            </v-col>
+          </v-row>
+          <!-- Empty state -->
+          <v-row v-else justify="center">
+            <v-col cols="12" class="text-center">
+              <v-icon size="64" color="grey lighten-1">mdi-emoticon-sad</v-icon>
+              <p class="mt-2">No contacts available.</p>
             </v-col>
           </v-row>
         </v-window-item>
@@ -326,15 +360,10 @@ export default {
       tab: 'posts',
       initialized: false,
       posts: [],
-      about: {
-        bio: 'Engineer, traveler, and lifelong learner.',
-        email: 'nimrathana@example.com',
-        location: 'Phnom Penh, Cambodia',
-      },
-      friends: [
-        { id: 1, name: 'Jane Smith', avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
-        { id: 2, name: 'Michael Roe', avatar: 'https://randomuser.me/api/portraits/men/64.jpg' },
-      ],
+      about: [],
+      contacts: [],
+      archivedData: [],
+      dialogType: '',
       photos: [],
     };
   },
@@ -363,6 +392,10 @@ export default {
           this.fetchPosts();
         } else if (newTab === 'photos' && this.photos.length === 0) {
           this.fetchPhotos();
+        } else if (newTab === 'about' && this.about.length === 0) {
+          this.fetchAbout();
+        } else if (newTab === 'contacts' && this.contacts.length === 0) {
+          this.openDialog('contacts');
         }
       }
     }
@@ -371,6 +404,64 @@ export default {
     useHead({ title: 'Profile' })
   },
   methods: {
+    openDialog(type) {
+      if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
+        return;
+      }
+
+      const phone = (this.tgUser.phone || '').toString().replace(/\s+/g, '');
+
+      if (type === 'archivedChats' && this.archivedData.length > 0) {
+        this.dialogType = 'archivedChats';
+        this.Dialog = true;
+        return;
+      }
+      if (type === 'contacts' && this.contacts.length > 0) {
+        this.dialogType = 'contacts';
+        this.Dialog = true;
+        return;
+      }
+
+      const endpoint = type === 'contacts' ? '/api/GetContacts' : '/api/GetArchivedChats';
+
+      this.loadingState.startLoading();
+      axios.post(process.env.APP_URL + endpoint, { phone })
+        .then((res) => {
+          if (type === 'contacts') {
+            this.contacts = res.data.contacts;
+          } else {
+            this.archivedData = res.data.archivedChats;
+          }
+          this.dialogType = type;
+          this.loadingState.stopLoading();
+        })
+        .catch((err) => {
+          const error = err.response?.data?.error || "Unknown error occurred.";
+          if (error.includes("Session")) {
+            this.errorMessage = "Session not found.";
+            this.dialogError = true;
+          }
+          this.loadingState.stopLoading();
+        });
+    },
+    async fetchAbout() {
+      if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
+        return;
+      }
+
+      this.loadingState.startLoading();
+      await axios.post(process.env.APP_URL + '/api/GetAbout', {
+        phone: this.tgUser.phone,
+        channelUsername: this.tgUser.username,
+      }).then(response => {
+        this.about = response.data.userDetails || [];
+        this.loadingState.stopLoading();
+      }).catch(err => {
+        this.showMessage = err.response?.data?.error || err.message;
+        this.dialogError = true;
+        this.loadingState.stopLoading();
+      });
+    },
     async fetchPosts() {
       if (!this.tgUser || !this.tgUser.phone || !this.tgUser.username) {
         return;

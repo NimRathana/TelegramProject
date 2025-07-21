@@ -14,6 +14,7 @@ Router.post('/api/GetPosts', TelegramController.GetPosts);
 Router.post('/api/GetPhotos', TelegramController.GetPhotos);
 Router.post('/api/GetArchivedChats', TelegramController.GetArchivedChats);
 Router.post('/api/GetContacts', TelegramController.GetContacts);
+Router.post('/api/GetAbout', TelegramController.GetAbout);
 Router.get('/api/test', TelegramController.Test);
 
 module.exports = Router;

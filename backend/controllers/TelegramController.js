@@ -849,6 +849,57 @@ class TelegramController {
             res.status(500).json({ error: err.errorMessage || err.message });
         }
     }
+
+    static async GetAbout(req, res) {
+        const { phone, channelUsername } = req.body;
+
+        if (!phone || !channelUsername) {
+            return res.status(400).json({ error: 'phone and channelUsername are required' });
+        }
+
+        try {
+            const sessionString = loadSession(phone.slice(3));
+            if (!sessionString) {
+                return res.status(400).json({ error: 'No saved session found for this phone' });
+            }
+
+            const client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+                connectionRetries: 5,
+                autoReconnect: true,
+            });
+
+            await client.connect();
+
+            const isAuthorized = await client.checkAuthorization();
+            if (!isAuthorized) {
+                deleteSession(phone.slice(3));
+                return res.status(401).json({ error: 'Session expired. Please log in again.' });
+            }
+
+            const entity = await client.getEntity(channelUsername);
+
+            if (entity.className !== "User") {
+                return res.status(400).json({ error: "Provided username does not refer to a user." });
+            }
+
+            const full = await client.invoke(new Api.users.GetFullUser({ id: entity }));
+
+            const userDetails = {
+                id: entity.id,
+                name: `${entity.firstName ?? ''} ${entity.lastName ?? ''}`.trim(),
+                username: entity.username ?? null,
+                phone: entity.phone ?? null,
+                bio: full.fullUser.about ?? null,
+                date: full.fullUser.birthday.day ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
+            };
+
+            saveSession(phone.slice(3), client.session.save());
+
+            return res.status(200).json({ userDetails });
+        } catch (err) {
+            res.status(500).json({ error: err.errorMessage || err.message });
+        }
+    }
 }
 
 module.exports = TelegramController;
