@@ -97,10 +97,10 @@
         <v-window-item value="about">
           <v-card v-if="about.length">
             <v-card-text>
-              <p v-if="about.bio"><strong>Bio:</strong> {{ about.bio }}</p>
-              <p v-if="about.phone"><strong>Phone:</strong> +{{ about.phone }}</p>
-              <p v-if="about.username"><strong>Username:</strong> @{{ about.username }}</p>
-              <p v-if="about.date"><strong>Date:</strong> {{ about.date }}</p>
+              <p v-if="about[0].bio"><strong>Bio:</strong> {{ about[0].bio }}</p>
+              <p v-if="about[0].phone"><strong>Phone:</strong> +{{ about[0].phone }}</p>
+              <p v-if="about[0].username"><strong>Username:</strong> @{{ about[0].username }}</p>
+              <p v-if="about[0].date"><strong>Date:</strong> {{ about[0].date }}</p>
             </v-card-text>
           </v-card>
           <!-- Empty state -->

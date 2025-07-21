@@ -884,14 +884,14 @@ class TelegramController {
 
             const full = await client.invoke(new Api.users.GetFullUser({ id: entity }));
 
-            const userDetails = {
+            const userDetails = [{
                 id: entity.id,
                 name: `${entity.firstName ?? ''} ${entity.lastName ?? ''}`.trim(),
                 username: entity.username ?? null,
                 phone: entity.phone ?? null,
                 bio: full.fullUser.about ?? null,
                 date: full.fullUser.birthday.day ? `${full.fullUser.birthday.day}-${full.fullUser.birthday.month}-${full.fullUser.birthday.year}` : null,
-            };
+            }];
 
             saveSession(phone.slice(3), client.session.save());
 
