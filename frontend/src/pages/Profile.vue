@@ -357,7 +357,7 @@ export default {
       appStore: useAppStore(),
       userStore: useUserStore(),
       loadingState: useLoadingState(),
-      tab: 'posts',
+      tab: 'about',
       initialized: false,
       posts: [],
       about: [],
