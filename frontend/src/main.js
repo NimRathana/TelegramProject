@@ -27,3 +27,5 @@ registerPlugins(app)
 app.use(createHead())
 app.config.globalProperties.$helper = helper;
 app.mount('#app')
+
+//test
