@@ -1,0 +1,15 @@
+version: '3'
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
