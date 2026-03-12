@@ -26,11 +26,11 @@ jobs:
       with:
         context: ./frontend
         push: true
-        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/vue-frontend:latest
+        tags: ${{ secrets.DOCKER_HUB_DESCRIPTION }}/vue-frontend:latest
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
       with:
         context: ./backend
         push: true
-        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/node-backend:latest
+        tags: ${{ secrets.DOCKER_HUB_DESCRIPTION }}/node-backend:latest
